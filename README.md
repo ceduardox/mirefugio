@@ -29,15 +29,20 @@ Configura `DATABASE_URL` antes de iniciar. La app crea la tabla automaticamente 
    - `ADMIN_PASSWORD`
    - `PUBLIC_BASE_URL`
    - `TICKET_PRICE_LABEL`
-   - `PAYMENT_QR_URL` opcional
+   - `PAYMENT_QR_URL` opcional, solo como respaldo si aun no subiste QR desde admin
 4. Start command: `npm start`
 
 ## QR de pago
 
-Opciones:
+El flujo principal es subirlo desde el panel admin:
 
-- Subir una imagen real como `public/payment-qr.png`, `public/payment-qr.jpg` o `public/payment-qr.jpeg`.
-- Usar `PAYMENT_QR_URL` si el QR esta alojado fuera de la app.
+1. Entrar a `/admin`.
+2. Ir a la seccion "Imagen de pago".
+3. Subir una imagen JPG, PNG o WEBP.
+
+La imagen queda guardada en PostgreSQL, asi funciona en Railway sin subir archivos al repo.
+
+Como respaldo tecnico tambien se puede usar `PAYMENT_QR_URL` o un archivo local `public/payment-qr.png`.
 
 ## Admin
 

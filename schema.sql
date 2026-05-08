@@ -18,3 +18,11 @@ CREATE TABLE IF NOT EXISTS tickets (
 
 CREATE INDEX IF NOT EXISTS tickets_status_created_idx
   ON tickets (status, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  file_name TEXT,
+  mime_type TEXT,
+  data BYTEA,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

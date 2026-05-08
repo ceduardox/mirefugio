@@ -33,6 +33,15 @@ const upload = multer({
   }
 });
 
+const qrUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 4 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    cb(allowed.includes(file.mimetype) ? null : new Error('El QR debe ser imagen JPG, PNG o WEBP'), allowed.includes(file.mimetype));
+  }
+});
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(publicDir));
 
@@ -47,6 +56,11 @@ function escapeHtml(value = '') {
 
 function normalizeWhatsapp(value = '') {
   return value.replace(/[^\d+]/g, '').slice(0, 24);
+}
+
+function safeDownloadName(value = '') {
+  const cleaned = String(value).replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 80);
+  return cleaned || 'qr-mi-refugio.png';
 }
 
 function statusCopy(status) {
@@ -123,6 +137,14 @@ function paymentQrPath() {
   return null;
 }
 
+async function getStoredPaymentQr() {
+  if (!pool) return null;
+  const { rows } = await pool.query(
+    "SELECT file_name, mime_type, data, updated_at FROM app_settings WHERE key = 'payment_qr'"
+  );
+  return rows[0] || null;
+}
+
 app.get('/logo', (_req, res) => {
   if (fs.existsSync(logoPath)) {
     res.sendFile(logoPath);
@@ -131,34 +153,54 @@ app.get('/logo', (_req, res) => {
   res.status(404).send('Logo no encontrado');
 });
 
-app.get('/payment-qr', (_req, res) => {
-  if (process.env.PAYMENT_QR_URL) {
-    res.redirect(process.env.PAYMENT_QR_URL);
-    return;
+app.get('/payment-qr', async (_req, res, next) => {
+  try {
+    const storedQr = await getStoredPaymentQr();
+    if (storedQr && storedQr.data) {
+      res.set('Cache-Control', 'no-store');
+      res.type(storedQr.mime_type).send(storedQr.data);
+      return;
+    }
+    if (process.env.PAYMENT_QR_URL) {
+      res.redirect(process.env.PAYMENT_QR_URL);
+      return;
+    }
+    const filePath = paymentQrPath();
+    if (filePath) {
+      res.sendFile(filePath);
+      return;
+    }
+    res.type('svg').send(`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900">
+      <rect width="900" height="900" fill="#fff"/>
+      <rect x="70" y="70" width="210" height="210" fill="none" stroke="#111" stroke-width="34"/>
+      <rect x="620" y="70" width="210" height="210" fill="none" stroke="#111" stroke-width="34"/>
+      <rect x="70" y="620" width="210" height="210" fill="none" stroke="#111" stroke-width="34"/>
+      <path d="M370 90h80v80h-80zm120 0h60v140h-60zm-120 170h180v70H370zm-10 120h90v90h-90zm150 0h70v70h-70zm110 0h150v90H620zm-260 150h70v180h-70zm110 0h180v70H470zm250 0h70v70h-70zm-250 130h70v80h-70zm130 0h210v150H600z" fill="#111"/>
+      <text x="450" y="430" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#d71920">QR de pago</text>
+      <text x="450" y="485" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="#222">Subir QR desde admin</text>
+    </svg>`);
+  } catch (error) {
+    next(error);
   }
-  const filePath = paymentQrPath();
-  if (filePath) {
-    res.sendFile(filePath);
-    return;
-  }
-  res.type('svg').send(`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900">
-    <rect width="900" height="900" fill="#fff"/>
-    <rect x="70" y="70" width="210" height="210" fill="none" stroke="#111" stroke-width="34"/>
-    <rect x="620" y="70" width="210" height="210" fill="none" stroke="#111" stroke-width="34"/>
-    <rect x="70" y="620" width="210" height="210" fill="none" stroke="#111" stroke-width="34"/>
-    <path d="M370 90h80v80h-80zm120 0h60v140h-60zm-120 170h180v70H370zm-10 120h90v90h-90zm150 0h70v70h-70zm110 0h150v90H620zm-260 150h70v180h-70zm110 0h180v70H470zm250 0h70v70h-70zm-250 130h70v80h-70zm130 0h210v150H600z" fill="#111"/>
-    <text x="450" y="430" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#d71920">QR de pago</text>
-    <text x="450" y="485" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="#222">Reemplazar por QR bancario real</text>
-  </svg>`);
 });
 
-app.get('/payment-qr/download', (_req, res) => {
-  const filePath = paymentQrPath();
-  if (filePath) {
-    res.download(filePath);
-    return;
+app.get('/payment-qr/download', async (_req, res, next) => {
+  try {
+    const storedQr = await getStoredPaymentQr();
+    if (storedQr && storedQr.data) {
+      res.set('Content-Disposition', `attachment; filename="${safeDownloadName(storedQr.file_name)}"`);
+      res.type(storedQr.mime_type).send(storedQr.data);
+      return;
+    }
+    const filePath = paymentQrPath();
+    if (filePath) {
+      res.download(filePath);
+      return;
+    }
+    res.redirect('/payment-qr');
+  } catch (error) {
+    next(error);
   }
-  res.redirect('/payment-qr');
 });
 
 app.get('/', requireDb, (_req, res) => {
@@ -311,6 +353,7 @@ app.post('/t/:publicId/receipt', requireDb, upload.single('receipt'), async (req
 
 app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
   try {
+    const storedQr = await getStoredPaymentQr();
     const { rows } = await pool.query('SELECT id, public_id, ticket_number, buyer_name, whatsapp, status, created_at, receipt_uploaded_at FROM tickets ORDER BY created_at DESC LIMIT 200');
     const items = rows.map((ticket) => `
       <article class="admin-row ${ticket.status}">
@@ -332,6 +375,25 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
         <nav class="topbar">
           <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Admin tickets</span></a>
         </nav>
+        <section class="content-card qr-admin-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">QR bancario</p>
+              <h1>Imagen de pago</h1>
+              <p class="muted">${storedQr ? `QR actualizado: ${new Date(storedQr.updated_at).toLocaleString('es-BO')}` : 'Aun no se subio un QR real. Los usuarios veran un QR temporal.'}</p>
+            </div>
+            <a class="ghost-btn" href="/payment-qr" target="_blank">Ver QR actual</a>
+          </div>
+          <div class="qr-admin-grid">
+            <img class="qr-preview" src="/payment-qr" alt="QR de pago actual">
+            <form class="upload-box" method="post" action="/admin/payment-qr" enctype="multipart/form-data">
+              <label>Subir o reemplazar QR
+                <input type="file" name="payment_qr" accept="image/png,image/jpeg,image/webp" required>
+              </label>
+              <button class="primary-btn" type="submit">Guardar QR de pago</button>
+            </form>
+          </div>
+        </section>
         <section class="content-card">
           <div class="section-title">
             <div>
@@ -343,6 +405,28 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
         </section>
       </main>
     `));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/admin/payment-qr', requireDb, adminAuth, qrUpload.single('payment_qr'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400).send('Debes subir una imagen QR valida.');
+      return;
+    }
+    await pool.query(
+      `INSERT INTO app_settings (key, file_name, mime_type, data, updated_at)
+       VALUES ('payment_qr', $1, $2, $3, NOW())
+       ON CONFLICT (key)
+       DO UPDATE SET file_name = EXCLUDED.file_name,
+                     mime_type = EXCLUDED.mime_type,
+                     data = EXCLUDED.data,
+                     updated_at = NOW()`,
+      [req.file.originalname, req.file.mimetype, req.file.buffer]
+    );
+    res.redirect('/admin');
   } catch (error) {
     next(error);
   }
