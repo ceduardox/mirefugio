@@ -1514,10 +1514,25 @@ button:disabled,
 }
 
 .payment-card .qr-frame {
+  position: relative;
   width: min(330px, 100%);
   margin: 0 auto;
   padding: 8px;
   box-shadow: none;
+  overflow: hidden;
+}
+
+.payment-card .qr-frame::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 10%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(215, 25, 32, 0.7), transparent);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .payment-card .qr-actions {
@@ -1537,6 +1552,16 @@ button:disabled,
   background:
     radial-gradient(circle at 50% 20%, rgba(215, 25, 32, 0.1), transparent 28%),
     linear-gradient(180deg, rgba(255, 251, 249, 0.96), rgba(255, 245, 243, 0.92));
+}
+
+.payment-card .file-drop::after {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(215, 25, 32, 0.16);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .payment-card .file-icon {
@@ -2207,14 +2232,66 @@ button:disabled,
   }
 
   .dog-feature img,
-  .hero-pets img {
+  .hero-pets img,
+  .ticket-status-pets,
+  .thanks-strip img {
     animation: dog-breathe 5.5s ease-in-out infinite;
     transform-origin: center;
   }
 
+  .hero-pets::after,
+  .ticket-status-hero::before,
+  .share-card::after,
+  .final-cta::after {
+    animation: soft-pulse 5.8s ease-in-out infinite;
+  }
+
+  .ticket-status-hero::after {
+    animation: heart-loop 5.8s ease-in-out infinite;
+  }
+
   .price-badge,
-  .hero-bubble {
+  .hero-bubble,
+  .ticket-state-card img {
     animation: badge-float 4.2s ease-in-out infinite;
+  }
+
+  .benefit-strip article,
+  .steps-grid article,
+  .prize-panel article,
+  .ticket-benefits article {
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+
+  .benefit-strip article:hover,
+  .steps-grid article:hover,
+  .prize-panel article:hover,
+  .ticket-benefits article:hover {
+    transform: translateY(-3px);
+  }
+
+  .benefit-strip article:nth-child(1),
+  .steps-grid article:nth-child(1),
+  .ticket-benefits article:nth-child(1) {
+    animation: card-float 6.4s ease-in-out infinite;
+  }
+
+  .benefit-strip article:nth-child(2),
+  .steps-grid article:nth-child(2),
+  .ticket-benefits article:nth-child(2) {
+    animation: card-float 6.4s ease-in-out 0.7s infinite;
+  }
+
+  .benefit-strip article:nth-child(3),
+  .steps-grid article:nth-child(3),
+  .ticket-benefits article:nth-child(3) {
+    animation: card-float 6.4s ease-in-out 1.4s infinite;
+  }
+
+  .benefit-strip article:nth-child(4),
+  .steps-grid article:nth-child(4),
+  .ticket-benefits article:nth-child(4) {
+    animation: card-float 6.4s ease-in-out 2.1s infinite;
   }
 
   .primary-btn::after {
@@ -2228,6 +2305,33 @@ button:disabled,
 
   .progress-step.active {
     animation: active-step 2.8s ease-in-out infinite;
+  }
+
+  .ticket-shell > .progress-track .progress-step.active span,
+  .payment-card .file-icon,
+  .whatsapp-btn .btn-icon {
+    animation: icon-pop 2.8s ease-in-out infinite;
+  }
+
+  .ticket-shell > .progress-track .progress-step.active::after {
+    animation: arrow-nudge 1.6s ease-in-out infinite;
+  }
+
+  .payment-card .qr-frame::after {
+    animation: qr-scan 3.2s ease-in-out infinite;
+  }
+
+  .payment-card .file-drop {
+    animation: upload-glow 4s ease-in-out infinite;
+  }
+
+  .payment-card .file-drop::after {
+    animation: upload-ring 3.6s ease-in-out infinite;
+  }
+
+  .ticket-help-card,
+  .thanks-strip {
+    animation: warm-glow 5.8s ease-in-out infinite;
   }
 
   .site-header,
@@ -2294,6 +2398,19 @@ button:disabled,
     }
   }
 
+  @keyframes heart-loop {
+    0%,
+    100% {
+      opacity: 0.42;
+      transform: translateY(0) rotate(-18deg) scale(1);
+    }
+
+    50% {
+      opacity: 0.68;
+      transform: translateY(-5px) rotate(-13deg) scale(1.03);
+    }
+  }
+
   @keyframes dog-breathe {
     0%,
     100% {
@@ -2336,6 +2453,95 @@ button:disabled,
 
     50% {
       box-shadow: 0 12px 28px rgba(215, 25, 32, 0.14);
+    }
+  }
+
+  @keyframes card-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  @keyframes icon-pop {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    45% {
+      transform: scale(1.08);
+    }
+  }
+
+  @keyframes arrow-nudge {
+    0%,
+    100% {
+      transform: translateX(0) rotate(45deg);
+    }
+
+    50% {
+      transform: translateX(5px) rotate(45deg);
+    }
+  }
+
+  @keyframes qr-scan {
+    0% {
+      opacity: 0;
+      transform: translateY(0);
+    }
+
+    18% {
+      opacity: 0.7;
+    }
+
+    70% {
+      opacity: 0.7;
+      transform: translateY(260px);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(260px);
+    }
+  }
+
+  @keyframes upload-glow {
+    0%,
+    100% {
+      box-shadow: inset 0 0 0 rgba(215, 25, 32, 0), 0 0 0 rgba(215, 25, 32, 0);
+    }
+
+    50% {
+      box-shadow: inset 0 0 34px rgba(215, 25, 32, 0.06), 0 14px 34px rgba(215, 25, 32, 0.1);
+    }
+  }
+
+  @keyframes upload-ring {
+    0%,
+    100% {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes warm-glow {
+    0%,
+    100% {
+      box-shadow: var(--soft-shadow);
+    }
+
+    50% {
+      box-shadow: 0 18px 46px rgba(215, 25, 32, 0.12);
     }
   }
 }
