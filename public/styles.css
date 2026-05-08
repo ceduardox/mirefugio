@@ -2331,6 +2331,33 @@ button:disabled,
     animation: button-sheen 4s ease-in-out infinite;
   }
 
+  .hero-actions .primary-btn,
+  .hero-actions .ghost-btn,
+  .final-cta .primary-btn,
+  .share-card .primary-btn,
+  .payment-card .primary-btn,
+  .whatsapp-btn,
+  .ticket-topbar .nav-actions .ghost-btn:not(:disabled) {
+    animation: button-invite 3.2s ease-in-out infinite;
+    transform-origin: center;
+    will-change: transform;
+  }
+
+  .hero-actions .ghost-btn,
+  .ticket-topbar .inline-form .ghost-btn {
+    animation-delay: 0.55s;
+  }
+
+  .final-cta .primary-btn,
+  .payment-card .primary-btn {
+    animation-delay: 0.25s;
+  }
+
+  .whatsapp-btn,
+  .share-card .primary-btn {
+    animation-delay: 0.85s;
+  }
+
   .progress-step.active {
     animation: active-step 2.8s ease-in-out infinite;
   }
@@ -2470,6 +2497,29 @@ button:disabled,
     70%,
     100% {
       transform: translateX(140%);
+    }
+  }
+
+  @keyframes button-invite {
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow: var(--soft-shadow);
+    }
+
+    42% {
+      transform: scale(1);
+      box-shadow: var(--soft-shadow);
+    }
+
+    52% {
+      transform: scale(1.035);
+      box-shadow: 0 18px 36px rgba(215, 25, 32, 0.2);
+    }
+
+    64% {
+      transform: scale(1);
+      box-shadow: var(--soft-shadow);
     }
   }
 
