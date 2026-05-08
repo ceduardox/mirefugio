@@ -42,6 +42,11 @@ document.querySelectorAll('[data-share]').forEach((button) => {
       await navigator.share({ title, text, url });
       return;
     }
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`.trim())}`;
+    const opened = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    if (opened) {
+      return;
+    }
     await navigator.clipboard.writeText(`${text}\n${url}`.trim());
     const previous = button.textContent;
     button.textContent = 'Link copiado';

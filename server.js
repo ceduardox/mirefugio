@@ -153,6 +153,7 @@ function icon(name) {
     eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
     file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/>',
     save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>',
+    logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
     alert: '<path d="M10.3 3.3L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/>'
   };
   return `<svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[name] || ''}</svg>`;
@@ -444,44 +445,106 @@ app.get('/og/ticket/:publicId.svg', requireDb, async (req, res, next) => {
 app.get('/', requireDb, (req, res) => {
   const activeSession = sessionPublicId(req);
   res.send(page(req, 'Comprar ticket', `
-    <main class="shell">
-      <nav class="landing-nav">
-        <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
-        <div class="nav-actions">
-          ${activeSession ? `<a class="ghost-btn" href="/t/${activeSession}">${icon('file')}<span>Mi ticket</span></a>${logoutButton()}` : `<a class="ghost-btn" href="/login">${icon('login')}<span>Ingresar</span></a>`}
-          <a class="primary-btn" href="#comprar">${icon('userPlus')}<span>Registrarme</span></a>
-        </div>
+    <header class="site-header">
+      <a href="/" class="site-brand">
+        <img src="/logo" alt="Mi Refugio SC">
+        <span><strong>Mi Refugio SC</strong><small>Un hogar, una segunda oportunidad</small></span>
+      </a>
+      <nav class="site-menu" aria-label="Navegacion principal">
+        <a href="#inicio">Inicio</a>
+        <a href="#rifa">Rifa actual</a>
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#nosotros">Nosotros</a>
+        <a href="#contacto">Contacto</a>
       </nav>
-      <section class="purchase-panel">
+      <div class="nav-actions">
+        ${activeSession ? `<a class="ghost-btn" href="/t/${activeSession}">${icon('file')}<span>Mi ticket</span></a>${logoutButton()}` : `<a class="ghost-btn" href="/login">${icon('login')}<span>Iniciar sesion</span></a>`}
+        <a class="primary-btn" href="#comprar">${icon('check')}<span>Comprar ticket</span></a>
+      </div>
+    </header>
+
+    <main class="home-shell" id="inicio">
+      <section class="hero-landing">
+        <div class="hero-copy">
+          <h1>Rifas solidarias <span>que cambian vidas</span></h1>
+          <p>Compra tu ticket digital y ayudanos a seguir brindando amor, alimento y atencion a los animales de nuestro refugio.</p>
+          <div class="hero-actions">
+            <a class="primary-btn big-cta" href="#comprar">${icon('check')}<span>Comprar ticket ${escapeHtml(ticketPriceLabel)}</span></a>
+            <a class="ghost-btn big-cta" href="#rifa">${icon('eye')}<span>Ver premios</span></a>
+          </div>
+          <p class="security-note">${icon('check')}<span>100% transparente: pago por QR y comprobante revisado.</span></p>
+        </div>
+        <div class="hero-pets" aria-label="Perritos y gatitos de Mi Refugio">
+          <img src="/assets/refuge-dog-scene.svg" alt="Perrito de Mi Refugio SC">
+          <div class="hero-bubble">Cada ticket es esperanza</div>
+        </div>
+      </section>
+
+      <section class="benefit-strip" aria-label="Beneficios">
+        <article>${icon('file')}<div><strong>Ticket digital unico</strong><span>Valido para el sorteo oficial.</span></div></article>
+        <article>${icon('download')}<div><strong>Pago por QR</strong><span>Facil, rapido y seguro desde tu banco.</span></div></article>
+        <article>${icon('upload')}<div><strong>Comprobante revisado</strong><span>Validamos tu pago manualmente.</span></div></article>
+        <article>${icon('share')}<div><strong>Comparte y ayuda</strong><span>Invita a mas personas a sumarse.</span></div></article>
+      </section>
+
+      <section class="raffle-grid" id="rifa">
+        <div class="raffle-info">
+          <p class="eyebrow">Rifa actual</p>
+          <h2>Tu ayuda hace la diferencia</h2>
+          <div class="raffle-details">
+            <article class="price-tile"><span>Precio del ticket</span><strong>${escapeHtml(ticketPriceLabel)}</strong><small>Pocos tickets, mas oportunidades.</small></article>
+            <article>${icon('file')}<div><span>Fecha del sorteo</span><strong>${escapeHtml(raffleDrawDate)}</strong></div></article>
+            <article>${icon('share')}<div><span>Contactos</span><strong>${escapeHtml(raffleContact)}</strong></div></article>
+            <article>${icon('check')}<div><span>Tu ayuda cubre</span><strong>${escapeHtml(raffleImpact)}</strong></div></article>
+          </div>
+        </div>
+        <div class="prize-panel">
+          <h3>Premios destacados</h3>
+          <article><span>1</span><div><strong>Combos de Deb Burgers</strong><small>Queques de chocolate gourmet</small></div></article>
+          <article><span>2</span><div><strong>Meow Sushi</strong><small>Media tablita standard y premios aliados</small></div></article>
+          <article><span>3</span><div><strong>Chequeo medico y camita</strong><small>Dra. Shirley Cayoja, Canino y mas premios</small></div></article>
+        </div>
+      </section>
+
+      <section class="steps-section" id="como-funciona">
+        <h2>¿Como funciona?</h2>
+        <div class="steps-grid">
+          <article><span>1</span>${icon('userPlus')}<strong>Te registras</strong><small>Crea tu cuenta de forma rapida y segura.</small></article>
+          <article><span>2</span>${icon('download')}<strong>Pagas por QR</strong><small>Escanea y paga desde tu banco.</small></article>
+          <article><span>3</span>${icon('upload')}<strong>Subes tu comprobante</strong><small>Adjunta tu comprobante digital.</small></article>
+          <article><span>4</span>${icon('file')}<strong>Recibes tu ticket</strong><small>Validamos tu pago y te damos tu ticket unico.</small></article>
+        </div>
+      </section>
+
+      <section class="story-share-grid" id="nosotros">
+        <article class="story-card">
+          <img src="/assets/refuge-dog-scene.svg" alt="Perritos de Mi Refugio SC">
+          <div>
+            <h2>Un refugio, muchas historias</h2>
+            <p>En Mi Refugio SC rescatamos, cuidamos y buscamos hogares responsables para animales en situacion de abandono. Con tu ayuda seguimos avanzando hacia nuestro terreno propio.</p>
+            <div class="mini-stats"><span>+120 <small>Rescates</small></span><span>+85 <small>Adopciones</small></span><span>1 <small>Gran meta</small></span></div>
+          </div>
+        </article>
+        <article class="share-card">
+          <h2>Comparte y multiplica la esperanza</h2>
+          <p>Ayudanos a llegar a mas personas. Comparte la rifa por WhatsApp y sumate a esta causa.</p>
+          <button class="primary-btn" type="button" data-share="${escapeHtml(absoluteUrl(req, '/'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(raffleShareText(req))}">${icon('share')}<span>Compartir por WhatsApp</span></button>
+        </article>
+      </section>
+
+      <section class="final-cta">
+        <div>
+          <strong>¡Tu ticket es su oportunidad!</strong>
+          <span>Compra ahora tu ticket solidario y se parte del cambio.</span>
+        </div>
+        <a class="primary-btn big-cta" href="#comprar">${icon('check')}<span>Comprar mi ticket solidario ${escapeHtml(ticketPriceLabel)}</span></a>
+      </section>
+
+      <section class="purchase-panel modern-form-panel" id="comprar">
         <div class="brand-block">
-          <div class="hero-logo-row">
-            <img class="brand-mark large" src="/logo" alt="Mi Refugio SC">
-            <div class="price-badge">
-              <span>Ticket</span>
-              <strong>${escapeHtml(ticketPriceLabel)}</strong>
-            </div>
-          </div>
-          <p class="eyebrow">Ticket solidario virtual</p>
-          <h1>${escapeHtml(raffleTitle)}</h1>
-          <p class="lead">Participa, ayuda y recibe un ticket digital unico cuando validemos tu comprobante.</p>
-          <div class="quick-facts">
-            <span>${escapeHtml(ticketPriceLabel)}</span>
-            <span>${escapeHtml(raffleDrawDate)}</span>
-            <span>Consultas ${escapeHtml(raffleContact)}</span>
-            <span>Pago seguro por QR</span>
-          </div>
-          <section class="prize-showcase" aria-label="Premios e impacto">
-            <div class="prize-card main-prize">
-              <p class="eyebrow">Premio destacado</p>
-              <h2>${escapeHtml(rafflePrize)}</h2>
-              <small>Configurable desde Railway para cada campana.</small>
-            </div>
-            <div class="prize-card">
-              <p class="eyebrow">Tu ayuda cubre</p>
-              <h2>${escapeHtml(raffleImpact)}</h2>
-              <small>Contactos: ${escapeHtml(raffleContact)}</small>
-            </div>
-          </section>
+          <p class="eyebrow">Compra tu ticket</p>
+          <h2>Registra tus datos y continua al pago QR</h2>
+          <p class="lead">Cuando subas tu comprobante, el equipo de Mi Refugio lo revisara y activara tu ticket digital.</p>
           <section class="dog-feature" aria-label="Mi Refugio ayuda a perritos">
             <img src="/assets/refuge-dog-scene.svg" alt="Perrito frente al refugio Mi Refugio SC">
             <div>
@@ -490,14 +553,13 @@ app.get('/', requireDb, (req, res) => {
               <p>${escapeHtml(raffleImpact)}. Tambien puedes consultar al ${escapeHtml(raffleContact)}.</p>
             </div>
           </section>
-          <section class="process-strip" aria-label="Proceso de compra">
-            <div><span>1</span><strong>Registras</strong><small>Nombre y WhatsApp</small></div>
-            <div><span>2</span><strong>Pagas QR</strong><small>Desde tu banco</small></div>
-            <div><span>3</span><strong>Subes</strong><small>Comprobante</small></div>
-            <div><span>4</span><strong>Recibes</strong><small>Ticket aprobado</small></div>
-          </section>
+          <div class="quick-facts">
+            <span>${escapeHtml(ticketPriceLabel)}</span>
+            <span>${escapeHtml(raffleDrawDate)}</span>
+            <span>Consultas ${escapeHtml(raffleContact)}</span>
+          </div>
         </div>
-        <form id="comprar" class="form-card premium-form" method="post" action="/tickets" data-loading-form>
+        <form class="form-card premium-form" method="post" action="/tickets" data-loading-form>
           <div class="form-heading">
             <span>Registro rapido</span>
             <strong>Datos para tu ticket</strong>
@@ -528,6 +590,13 @@ app.get('/', requireDb, (req, res) => {
           <p class="trust-note">Despues veras el QR, subiras tu comprobante y podras volver con tu link.</p>
         </form>
       </section>
+
+      <footer class="site-footer" id="contacto">
+        <div class="site-brand"><img src="/logo" alt="Mi Refugio SC"><span><strong>Mi Refugio SC</strong><small>Un hogar, una segunda oportunidad</small></span></div>
+        <div><strong>Contactanos</strong><span>${escapeHtml(raffleContact)}</span><span>mirefugiosc@gmail.com</span></div>
+        <div><strong>Enlaces</strong><a href="#rifa">Rifa actual</a><a href="#como-funciona">Como funciona</a><a href="#nosotros">Nosotros</a></div>
+        <div><strong>Siguenos</strong><span>Facebook · Instagram · WhatsApp</span></div>
+      </footer>
     </main>
   `, {
     title: `${raffleTitle} | Mi Refugio SC`,
