@@ -313,6 +313,15 @@ app.get('/logo', (_req, res) => {
   res.status(404).send('Logo no encontrado');
 });
 
+app.get('/imagenlogo', (_req, res) => {
+  if (fs.existsSync(logoPath)) {
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.sendFile(logoPath);
+    return;
+  }
+  res.status(404).send('Logo no encontrado');
+});
+
 app.get('/payment-qr', async (_req, res, next) => {
   try {
     const storedQr = await getStoredPaymentQr();
@@ -504,8 +513,8 @@ app.get('/', requireDb, (req, res) => {
     title: `${raffleTitle} | Mi Refugio SC`,
     description: `Participa en la rifa solidaria de Mi Refugio SC. Con cada ticket apoyas alimento, rescates y atencion para perritos. Premio: ${rafflePrize}. Aporte: ${ticketPriceLabel}.`,
     url: '/',
-    image: '/assets/refuge-dog-scene.svg',
-    imageAlt: 'Rifa solidaria Mi Refugio SC para ayudar a perritos'
+    image: '/imagenlogo',
+    imageAlt: 'Logo Mi Refugio SC'
   }));
 });
 
