@@ -1321,15 +1321,43 @@ button:disabled,
 }
 
 .tall-action {
-  min-width: 104px;
-  min-height: 84px;
-  flex-direction: column;
-  gap: 6px;
+  min-width: 112px;
+  min-height: 58px;
+  flex-direction: row;
+  gap: 8px;
 }
 
 .tall-action .btn-icon {
-  width: 30px;
-  height: 30px;
+  width: 20px;
+  height: 20px;
+}
+
+.ticket-topbar .nav-actions {
+  gap: 12px;
+}
+
+.ticket-topbar .nav-actions .ghost-btn {
+  min-width: 112px;
+  min-height: 58px;
+  padding: 0 16px;
+  border-color: rgba(64, 31, 24, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 247, 0.94));
+  color: #2f2520;
+  font-size: 0.9rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  box-shadow: 0 8px 22px rgba(64, 31, 24, 0.08);
+}
+
+.ticket-topbar .nav-actions .ghost-btn .btn-icon {
+  width: 19px;
+  height: 19px;
+  color: var(--green);
+}
+
+.ticket-topbar .inline-form .ghost-btn .btn-icon {
+  color: var(--ink);
 }
 
 .ticket-status-hero {
@@ -2736,6 +2764,13 @@ button:disabled,
   .tall-action {
     min-height: 56px;
     flex-direction: row;
+  }
+
+  .ticket-topbar .nav-actions .ghost-btn {
+    min-width: 0;
+    min-height: 52px;
+    font-size: 0.84rem;
+    padding: 0 12px;
   }
 
   .tall-action .btn-icon {
