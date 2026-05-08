@@ -2,6 +2,3 @@ node_modules/
 .env
 .DS_Store
 npm-debug.log*
-public/payment-qr.png
-public/payment-qr.jpg
-public/payment-qr.jpeg
