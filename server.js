@@ -722,7 +722,7 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
         <nav class="topbar">
           <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
           <div class="nav-actions">
-            <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl(req, '/'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">Compartir rifa</button>
+            <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl(req, '/'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">Comparte con tus amigos</button>
             ${activeSession ? logoutButton() : ''}
           </div>
         </nav>
