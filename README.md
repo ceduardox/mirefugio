@@ -6,7 +6,7 @@ Sistema Node.js + PostgreSQL para vender tickets virtuales solidarios.
 
 - El usuario registra nombre, WhatsApp y correo opcional.
 - El usuario crea una contraseña, guardada como hash.
-- El comprador puede ingresar en `/login` con WhatsApp y contraseña para volver a su ticket.
+- El comprador puede ingresar en `/login` con WhatsApp o correo y contraseña para volver a su ticket.
 - El telefono usa selector de pais con deteccion inicial por IP y cambio manual.
 - La portada muestra premio, fecha, causa y pasos antes del formulario.
 - Ve el QR de pago, puede ampliarlo o descargarlo.

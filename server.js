@@ -67,6 +67,10 @@ function normalizeCountryCode(value = '') {
   return value.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
 }
 
+function normalizeEmail(value = '') {
+  return String(value).trim().toLowerCase().slice(0, 160);
+}
+
 function safeDownloadName(value = '') {
   const cleaned = String(value).replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 80);
   return cleaned || 'qr-mi-refugio.png';
@@ -308,10 +312,8 @@ app.get('/', requireDb, (_req, res) => {
           <label>Nombre completo
             <input name="buyer_name" autocomplete="name" placeholder="Ej. Maria Fernandez" required>
           </label>
-          <label>Numero de telefono
-            <input id="phone-input" name="phone_display" type="tel" inputmode="tel" autocomplete="tel" placeholder="Tu numero de WhatsApp" required>
-            <input id="phone-full" name="whatsapp" type="hidden">
-            <input id="phone-country" name="phone_country" type="hidden">
+          <label>WhatsApp o correo
+            <input name="login_id" autocomplete="username" placeholder="Ej. +59170000000 o tu@email.com" required>
           </label>
           <label>Correo opcional
             <input name="email" type="email" autocomplete="email" placeholder="tu@email.com">
@@ -342,7 +344,7 @@ app.get('/login', requireDb, (_req, res) => {
           <img class="brand-mark large" src="/logo" alt="Mi Refugio SC">
           <p class="eyebrow">Consulta tu ticket</p>
           <h1>Ingresa para ver el estado de tu ticket</h1>
-          <p>Usa el mismo WhatsApp y contrasena que registraste al comprar. Te llevaremos a tu ticket mas reciente.</p>
+          <p>Usa el mismo WhatsApp o correo y contrasena que registraste al comprar. Te llevaremos a tu ticket mas reciente.</p>
         </div>
         <form class="form-card auth-card" method="post" action="/login" data-loading-form>
           <div class="form-heading">
@@ -359,7 +361,7 @@ app.get('/login', requireDb, (_req, res) => {
             <input name="password" type="password" autocomplete="current-password" minlength="6" placeholder="Tu contrasena" required>
           </label>
           <button class="primary-btn" type="submit">Ingresar a mi ticket</button>
-          <p class="trust-note">No necesitas recordar el link si usas el mismo telefono y contrasena.</p>
+          <p class="trust-note">No necesitas recordar el link si usas el mismo WhatsApp/correo y contrasena.</p>
         </form>
       </section>
     </main>
@@ -368,15 +370,18 @@ app.get('/login', requireDb, (_req, res) => {
 
 app.post('/login', requireDb, async (req, res, next) => {
   try {
-    const whatsapp = normalizeWhatsapp(req.body.whatsapp || req.body.phone_display || '');
+    const loginId = String(req.body.login_id || '').trim();
+    const email = loginId.includes('@') ? normalizeEmail(loginId) : '';
+    const whatsapp = email ? '' : normalizeWhatsapp(loginId);
     const password = String(req.body.password || '');
     const { rows } = await pool.query(
       `SELECT public_id, password_hash
        FROM tickets
-       WHERE whatsapp = $1 AND password_hash IS NOT NULL
+       WHERE password_hash IS NOT NULL
+         AND (($1 <> '' AND whatsapp = $1) OR ($2 <> '' AND LOWER(email) = $2))
        ORDER BY created_at DESC
        LIMIT 1`,
-      [whatsapp]
+      [whatsapp, email]
     );
     const ticket = rows[0];
     const isValid = ticket ? await bcrypt.compare(password, ticket.password_hash) : false;
@@ -386,7 +391,7 @@ app.post('/login', requireDb, async (req, res, next) => {
           <section class="notice">
             <img class="brand-mark" src="/logo" alt="Mi Refugio SC">
             <h1>No encontramos ese acceso</h1>
-            <p>Revisa tu WhatsApp y contrasena. Deben ser los mismos datos usados al registrarte.</p>
+            <p>Revisa tu WhatsApp/correo y contrasena. Deben ser los mismos datos usados al registrarte.</p>
             <div class="modal-actions">
               <a class="primary-btn" href="/login">Intentar de nuevo</a>
               <a class="ghost-btn" href="/#comprar">Registrarme</a>
