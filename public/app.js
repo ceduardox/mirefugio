@@ -42,7 +42,7 @@ document.querySelectorAll('[data-share]').forEach((button) => {
       await navigator.share({ title, text, url });
       return;
     }
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(`${text}\n${url}`.trim());
     const previous = button.textContent;
     button.textContent = 'Link copiado';
     setTimeout(() => {
