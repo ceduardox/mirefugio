@@ -33,6 +33,24 @@ document.querySelectorAll('[data-copy]').forEach((button) => {
   });
 });
 
+document.querySelectorAll('[data-share]').forEach((button) => {
+  button.addEventListener('click', async () => {
+    const url = button.dataset.share;
+    const title = button.dataset.shareTitle || document.title;
+    const text = button.dataset.shareText || '';
+    if (navigator.share) {
+      await navigator.share({ title, text, url });
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    const previous = button.textContent;
+    button.textContent = 'Link copiado';
+    setTimeout(() => {
+      button.textContent = previous;
+    }, 1600);
+  });
+});
+
 document.querySelectorAll('[data-loading-form]').forEach((form) => {
   form.addEventListener('submit', () => {
     const button = form.querySelector('button[type="submit"]');

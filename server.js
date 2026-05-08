@@ -154,13 +154,38 @@ function ticketLink(publicId) {
   return `${baseUrl}/t/${publicId}`;
 }
 
-function page(title, body) {
+function absoluteUrl(pathname) {
+  if (!pathname) return baseUrl;
+  if (pathname.startsWith('http://') || pathname.startsWith('https://')) return pathname;
+  return `${baseUrl}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
+}
+
+function page(title, body, meta = {}) {
+  const metaTitle = meta.title || `${title} | Mi Refugio SC`;
+  const description = meta.description || `${raffleTitle}. Compra tu ticket solidario, paga por QR y ayuda a los perritos de Mi Refugio SC.`;
+  const url = absoluteUrl(meta.url || '/');
+  const image = absoluteUrl(meta.image || '/assets/refuge-dog-scene.svg');
   return `<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtml(title)} | Mi Refugio SC</title>
+  <title>${escapeHtml(metaTitle)}</title>
+  <meta name="description" content="${escapeHtml(description)}">
+  <meta property="og:type" content="${escapeHtml(meta.type || 'website')}">
+  <meta property="og:site_name" content="Mi Refugio SC">
+  <meta property="og:title" content="${escapeHtml(metaTitle)}">
+  <meta property="og:description" content="${escapeHtml(description)}">
+  <meta property="og:url" content="${escapeHtml(url)}">
+  <meta property="og:image" content="${escapeHtml(image)}">
+  <meta property="og:image:type" content="${image.endsWith('.svg') ? 'image/svg+xml' : 'image/jpeg'}">
+  <meta property="og:image:alt" content="${escapeHtml(meta.imageAlt || 'Ticket solidario Mi Refugio SC')}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(metaTitle)}">
+  <meta name="twitter:description" content="${escapeHtml(description)}">
+  <meta name="twitter:image" content="${escapeHtml(image)}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
@@ -249,6 +274,56 @@ app.get('/payment-qr/download', async (_req, res, next) => {
   }
 });
 
+app.get('/og/ticket/:publicId.svg', requireDb, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT buyer_name, ticket_number, status FROM tickets WHERE public_id = $1',
+      [req.params.publicId]
+    );
+    const ticket = rows[0];
+    if (!ticket) {
+      res.status(404).send('Ticket no encontrado');
+      return;
+    }
+    const number = ticket.ticket_number || (ticket.status === 'approved' ? 'Ticket aprobado' : 'En revision');
+    const buyer = ticket.buyer_name || 'Colaborador';
+    res.set('Cache-Control', 'public, max-age=300');
+    res.type('svg').send(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#fffaf6"/>
+          <stop offset="1" stop-color="#ffe6e3"/>
+        </linearGradient>
+        <linearGradient id="ticket" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#181311"/>
+          <stop offset=".55" stop-color="#3a1214"/>
+          <stop offset="1" stop-color="#d71920"/>
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="630" fill="url(#bg)"/>
+      <g opacity=".12" fill="#d71920">
+        <circle cx="980" cy="100" r="28"/><circle cx="1030" cy="78" r="30"/><circle cx="1080" cy="100" r="28"/><path d="M1030 135c58 0 86 69 48 98-22 17-46-2-48-2s-26 19-48 2c-38-29-10-98 48-98z"/>
+        <circle cx="132" cy="470" r="20"/><circle cx="168" cy="454" r="22"/><circle cx="204" cy="470" r="20"/><path d="M168 496c42 0 64 50 36 72-16 12-34-2-36-2s-20 14-36 2c-28-22-6-72 36-72z"/>
+      </g>
+      <rect x="86" y="74" width="1028" height="482" rx="26" fill="#fff" opacity=".82"/>
+      <rect x="132" y="118" width="936" height="394" rx="22" fill="url(#ticket)"/>
+      <circle cx="132" cy="315" r="34" fill="#fffaf6"/>
+      <circle cx="1068" cy="315" r="34" fill="#fffaf6"/>
+      <text x="180" y="190" font-family="Arial, sans-serif" font-size="28" font-weight="800" fill="#ffced0" letter-spacing="4">MI REFUGIO SC</text>
+      <text x="180" y="278" font-family="Arial, sans-serif" font-size="70" font-weight="900" fill="#ffffff">${escapeHtml(number)}</text>
+      <text x="180" y="340" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#fff4f4">Ticket solidario de ${escapeHtml(buyer)}</text>
+      <text x="180" y="410" font-family="Arial, sans-serif" font-size="30" fill="#ffe4e4">${escapeHtml(raffleTitle)}</text>
+      <text x="180" y="456" font-family="Arial, sans-serif" font-size="24" fill="#ffd8d8">Ayuda con alimento, rescates y atencion veterinaria</text>
+      <g transform="translate(880 174)">
+        <rect width="128" height="128" rx="22" fill="#fff"/>
+        <circle cx="40" cy="42" r="15" fill="#d71920"/><circle cx="64" cy="30" r="16" fill="#d71920"/><circle cx="88" cy="42" r="15" fill="#d71920"/><path d="M64 62c34 0 50 39 27 57-13 11-26-1-27-1s-14 12-27 1C14 101 30 62 64 62z" fill="#181311"/>
+      </g>
+    </svg>`);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get('/', requireDb, (_req, res) => {
   res.send(page('Comprar ticket', `
     <main class="shell">
@@ -312,8 +387,10 @@ app.get('/', requireDb, (_req, res) => {
           <label>Nombre completo
             <input name="buyer_name" autocomplete="name" placeholder="Ej. Maria Fernandez" required>
           </label>
-          <label>WhatsApp o correo
-            <input name="login_id" autocomplete="username" placeholder="Ej. +59170000000 o tu@email.com" required>
+          <label>Numero de telefono
+            <input id="phone-input" name="phone_display" type="tel" inputmode="tel" autocomplete="tel" placeholder="Tu numero de WhatsApp" required>
+            <input id="phone-full" name="whatsapp" type="hidden">
+            <input id="phone-country" name="phone_country" type="hidden">
           </label>
           <label>Correo opcional
             <input name="email" type="email" autocomplete="email" placeholder="tu@email.com">
@@ -352,10 +429,8 @@ app.get('/login', requireDb, (_req, res) => {
             <strong>Acceso comprador</strong>
             <small>Si aun no compraste, registrate para generar tu ticket.</small>
           </div>
-          <label>Numero de telefono
-            <input id="phone-input" name="phone_display" type="tel" inputmode="tel" autocomplete="tel" placeholder="Tu numero de WhatsApp" required>
-            <input id="phone-full" name="whatsapp" type="hidden">
-            <input id="phone-country" name="phone_country" type="hidden">
+          <label>WhatsApp o correo
+            <input name="login_id" autocomplete="username" placeholder="Ej. +59170000000 o tu@email.com" required>
           </label>
           <label>Contrasena
             <input name="password" type="password" autocomplete="current-password" minlength="6" placeholder="Tu contrasena" required>
@@ -506,11 +581,17 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
       </section>
     ` : '';
 
+    const shareTitle = ticket.status === 'approved'
+      ? `Ticket ${ticket.ticket_number} | Mi Refugio SC`
+      : `Ticket en revision | Mi Refugio SC`;
+    const shareDescription = ticket.status === 'approved'
+      ? `${ticket.buyer_name || 'Colaborador'} ya tiene su ticket solidario para ${raffleTitle}.`
+      : `${ticket.buyer_name || 'Colaborador'} esta participando en ${raffleTitle}. Ayuda a los perritos de Mi Refugio SC.`;
     res.send(page('Ticket virtual', `
       <main class="shell narrow">
         <nav class="topbar">
           <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
-          <button class="ghost-btn" type="button" data-copy="${escapeHtml(ticketLink(ticket.public_id))}">Copiar link</button>
+          <button class="ghost-btn" type="button" data-share="${escapeHtml(ticketLink(ticket.public_id))}" data-share-title="${escapeHtml(shareTitle)}" data-share-text="${escapeHtml(shareDescription)}">Compartir ticket</button>
         </nav>
         <section class="status-hero ${ticket.status}">
           <p class="eyebrow">${escapeHtml(statusCopy(ticket.status))}</p>
@@ -535,7 +616,13 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
           <button class="ghost-btn" type="button" data-copy="${escapeHtml(ticketLink(ticket.public_id))}">Copiar link</button>
         </div>
       </dialog>
-    `));
+    `, {
+      title: shareTitle,
+      description: shareDescription,
+      url: `/t/${ticket.public_id}`,
+      image: `/og/ticket/${ticket.public_id}.svg`,
+      type: 'article'
+    }));
   } catch (error) {
     next(error);
   }
