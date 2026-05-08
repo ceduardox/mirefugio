@@ -17,6 +17,7 @@ const rafflePrize = process.env.RAFFLE_PRIZE || 'Premio sorpresa para ayudar a n
 const raffleDrawDate = process.env.RAFFLE_DRAW_DATE || 'Fecha por anunciar';
 const raffleImpact = process.env.RAFFLE_IMPACT || 'Alimento, rescates y atencion veterinaria';
 const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
+const sessionSecret = process.env.SESSION_SECRET || adminPassword || 'mi-refugio-session';
 const databaseUrl = process.env.DATABASE_URL;
 const rootDir = __dirname;
 const publicDir = path.join(rootDir, 'public');
@@ -69,6 +70,64 @@ function normalizeCountryCode(value = '') {
 
 function normalizeEmail(value = '') {
   return String(value).trim().toLowerCase().slice(0, 160);
+}
+
+function parseCookies(req) {
+  return Object.fromEntries(
+    String(req.headers.cookie || '')
+      .split(';')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => {
+        const index = part.indexOf('=');
+        return index === -1
+          ? [part, '']
+          : [part.slice(0, index), decodeURIComponent(part.slice(index + 1))];
+      })
+  );
+}
+
+function signSession(publicId) {
+  const signature = crypto.createHmac('sha256', sessionSecret).update(publicId).digest('base64url');
+  return `${publicId}.${signature}`;
+}
+
+function verifySession(value = '') {
+  const [publicId, signature] = String(value).split('.');
+  if (!publicId || !signature) return '';
+  const expected = crypto.createHmac('sha256', sessionSecret).update(publicId).digest('base64url');
+  const given = Buffer.from(signature);
+  const wanted = Buffer.from(expected);
+  if (given.length !== wanted.length || !crypto.timingSafeEqual(given, wanted)) return '';
+  return publicId;
+}
+
+function sessionPublicId(req) {
+  return verifySession(parseCookies(req).mi_refugio_session);
+}
+
+function setSessionCookie(res, publicId, remember) {
+  const parts = [
+    `mi_refugio_session=${encodeURIComponent(signSession(publicId))}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax'
+  ];
+  if (remember) {
+    parts.push(`Max-Age=${60 * 60 * 24 * 400}`);
+  }
+  if (baseUrl.startsWith('https://')) {
+    parts.push('Secure');
+  }
+  res.setHeader('Set-Cookie', parts.join('; '));
+}
+
+function clearSessionCookie(res) {
+  res.setHeader('Set-Cookie', 'mi_refugio_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+}
+
+function logoutButton() {
+  return `<form class="inline-form" method="post" action="/logout"><button class="ghost-btn" type="submit">Cerrar sesion</button></form>`;
 }
 
 function safeDownloadName(value = '') {
@@ -335,13 +394,14 @@ app.get('/og/ticket/:publicId.svg', requireDb, async (req, res, next) => {
   }
 });
 
-app.get('/', requireDb, (_req, res) => {
+app.get('/', requireDb, (req, res) => {
+  const activeSession = sessionPublicId(req);
   res.send(page('Comprar ticket', `
     <main class="shell">
       <nav class="landing-nav">
         <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
         <div class="nav-actions">
-          <a class="ghost-btn" href="/login">Ingresar</a>
+          ${activeSession ? `<a class="ghost-btn" href="/t/${activeSession}">Mi ticket</a>${logoutButton()}` : '<a class="ghost-btn" href="/login">Ingresar</a>'}
           <a class="primary-btn" href="#comprar">Registrarme</a>
         </div>
       </nav>
@@ -412,6 +472,10 @@ app.get('/', requireDb, (_req, res) => {
           <label>Repetir contrasena
             <input name="password_confirm" type="password" autocomplete="new-password" minlength="6" placeholder="Confirma tu contrasena" required>
           </label>
+          <label class="check-row">
+            <input name="remember_session" type="checkbox" value="1" checked>
+            <span>Guardar sesion en este dispositivo</span>
+          </label>
           <button class="primary-btn" type="submit">Comprar ticket solidario</button>
           <p class="trust-note">Despues veras el QR, subiras tu comprobante y podras volver con tu link.</p>
         </form>
@@ -420,12 +484,16 @@ app.get('/', requireDb, (_req, res) => {
   `));
 });
 
-app.get('/login', requireDb, (_req, res) => {
+app.get('/login', requireDb, (req, res) => {
+  const activeSession = sessionPublicId(req);
   res.send(page('Ingresar', `
     <main class="shell compact">
       <nav class="topbar">
         <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
-        <a class="ghost-btn" href="/#comprar">Registrarme</a>
+        <div class="nav-actions">
+          ${activeSession ? `<a class="ghost-btn" href="/t/${activeSession}">Mi ticket</a>${logoutButton()}` : ''}
+          <a class="ghost-btn" href="/#comprar">Registrarme</a>
+        </div>
       </nav>
       <section class="auth-layout">
         <div class="auth-intro">
@@ -445,6 +513,10 @@ app.get('/login', requireDb, (_req, res) => {
           </label>
           <label>Contrasena
             <input name="password" type="password" autocomplete="current-password" minlength="6" placeholder="Tu contrasena" required>
+          </label>
+          <label class="check-row">
+            <input name="remember_session" type="checkbox" value="1" checked>
+            <span>Guardar sesion en este dispositivo</span>
           </label>
           <button class="primary-btn" type="submit">Ingresar a mi ticket</button>
           <p class="trust-note">No necesitas recordar el link si usas el mismo WhatsApp/correo y contrasena.</p>
@@ -487,10 +559,17 @@ app.post('/login', requireDb, async (req, res, next) => {
       `));
       return;
     }
+    setSessionCookie(res, ticket.public_id, req.body.remember_session === '1');
     res.redirect(`/t/${ticket.public_id}`);
   } catch (error) {
     next(error);
   }
+});
+
+app.post('/logout', (req, res) => {
+  clearSessionCookie(res);
+  const nextUrl = String(req.headers.referer || '/');
+  res.redirect(nextUrl.startsWith(baseUrl) ? nextUrl : '/');
 });
 
 app.post('/tickets', requireDb, async (req, res, next) => {
@@ -522,6 +601,7 @@ app.post('/tickets', requireDb, async (req, res, next) => {
        RETURNING public_id`,
       [publicId, buyerName, whatsapp, phoneCountry, email, passwordHash]
     );
+    setSessionCookie(res, result.rows[0].public_id, req.body.remember_session === '1');
     res.redirect(`/t/${result.rows[0].public_id}`);
   } catch (error) {
     next(error);
@@ -530,6 +610,7 @@ app.post('/tickets', requireDb, async (req, res, next) => {
 
 app.get('/t/:publicId', requireDb, async (req, res, next) => {
   try {
+    const activeSession = sessionPublicId(req);
     const { rows } = await pool.query('SELECT * FROM tickets WHERE public_id = $1', [req.params.publicId]);
     const ticket = rows[0];
     if (!ticket) {
@@ -603,7 +684,10 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
       <main class="shell narrow">
         <nav class="topbar">
           <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
-          <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl('/#comprar'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">Compartir rifa</button>
+          <div class="nav-actions">
+            <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl('/#comprar'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">Compartir rifa</button>
+            ${activeSession ? logoutButton() : '<a class="ghost-btn" href="/login">Ingresar</a>'}
+          </div>
         </nav>
         <section class="status-hero ${ticket.status}">
           <p class="eyebrow">${escapeHtml(statusCopy(ticket.status))}</p>
