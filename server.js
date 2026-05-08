@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const multer = require('multer');
+const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
 
 const app = express();
@@ -56,6 +57,10 @@ function escapeHtml(value = '') {
 
 function normalizeWhatsapp(value = '') {
   return value.replace(/[^\d+]/g, '').slice(0, 24);
+}
+
+function normalizeCountryCode(value = '') {
+  return value.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
 }
 
 function safeDownloadName(value = '') {
@@ -120,10 +125,15 @@ function page(title, body) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(title)} | Mi Refugio SC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/css/intlTelInput.css">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   ${body}
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/js/intlTelInput.min.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>`;
@@ -219,14 +229,26 @@ app.get('/', requireDb, (_req, res) => {
           </div>
         </div>
         <form class="form-card" method="post" action="/tickets">
+          <div class="form-heading">
+            <span>Registro rapido</span>
+            <strong>Datos para tu ticket</strong>
+          </div>
           <label>Nombre completo
             <input name="buyer_name" autocomplete="name" placeholder="Ej. Maria Fernandez" required>
           </label>
-          <label>WhatsApp
-            <input name="whatsapp" inputmode="tel" autocomplete="tel" placeholder="Ej. +59170000000" required>
+          <label>Numero de telefono
+            <input id="phone-input" name="phone_display" type="tel" inputmode="tel" autocomplete="tel" placeholder="Tu numero de WhatsApp" required>
+            <input id="phone-full" name="whatsapp" type="hidden">
+            <input id="phone-country" name="phone_country" type="hidden">
           </label>
           <label>Correo opcional
             <input name="email" type="email" autocomplete="email" placeholder="tu@email.com">
+          </label>
+          <label>Crear contraseña
+            <input name="password" type="password" autocomplete="new-password" minlength="6" placeholder="Minimo 6 caracteres" required>
+          </label>
+          <label>Repetir contraseña
+            <input name="password_confirm" type="password" autocomplete="new-password" minlength="6" placeholder="Confirma tu contraseña" required>
           </label>
           <button class="primary-btn" type="submit">Continuar al pago</button>
         </form>
@@ -239,13 +261,30 @@ app.post('/tickets', requireDb, async (req, res, next) => {
   try {
     const publicId = crypto.randomUUID();
     const buyerName = String(req.body.buyer_name || '').trim().slice(0, 120);
-    const whatsapp = normalizeWhatsapp(req.body.whatsapp || '');
+    const whatsapp = normalizeWhatsapp(req.body.whatsapp || req.body.phone_display || '');
+    const phoneCountry = normalizeCountryCode(req.body.phone_country || '');
     const email = String(req.body.email || '').trim().slice(0, 160);
+    const password = String(req.body.password || '');
+    const passwordConfirm = String(req.body.password_confirm || '');
+    if (password.length < 6 || password !== passwordConfirm) {
+      res.status(400).send(page('Revisa tu contraseña', `
+        <main class="shell compact">
+          <section class="notice">
+            <img class="brand-mark" src="/logo" alt="Mi Refugio SC">
+            <h1>Las contraseñas no coinciden</h1>
+            <p>Vuelve al formulario y confirma una contraseña de al menos 6 caracteres.</p>
+            <a class="primary-btn" href="/">Volver</a>
+          </section>
+        </main>
+      `));
+      return;
+    }
+    const passwordHash = await bcrypt.hash(password, 12);
     const result = await pool.query(
-      `INSERT INTO tickets (public_id, buyer_name, whatsapp, email)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO tickets (public_id, buyer_name, whatsapp, phone_country, email, password_hash)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING public_id`,
-      [publicId, buyerName, whatsapp, email]
+      [publicId, buyerName, whatsapp, phoneCountry, email, passwordHash]
     );
     res.redirect(`/t/${result.rows[0].public_id}`);
   } catch (error) {
@@ -360,7 +399,7 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
         <div>
           <strong>${escapeHtml(ticket.buyer_name || 'Sin nombre')}</strong>
           <span>${escapeHtml(ticket.whatsapp || '')}</span>
-          <small>${escapeHtml(statusCopy(ticket.status))} · ${new Date(ticket.created_at).toLocaleString('es-BO')}</small>
+          <small>${escapeHtml(statusCopy(ticket.status))} - ${new Date(ticket.created_at).toLocaleString('es-BO')}</small>
         </div>
         <div class="admin-actions">
           <a class="ghost-btn" href="/t/${ticket.public_id}" target="_blank">Ver</a>

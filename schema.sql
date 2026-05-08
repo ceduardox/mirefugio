@@ -4,7 +4,9 @@ CREATE TABLE IF NOT EXISTS tickets (
   ticket_number TEXT UNIQUE,
   buyer_name TEXT,
   whatsapp TEXT,
+  phone_country TEXT,
   email TEXT,
+  password_hash TEXT,
   status TEXT NOT NULL DEFAULT 'awaiting_receipt',
   receipt_file_name TEXT,
   receipt_mime_type TEXT,
@@ -18,6 +20,10 @@ CREATE TABLE IF NOT EXISTS tickets (
 
 CREATE INDEX IF NOT EXISTS tickets_status_created_idx
   ON tickets (status, created_at DESC);
+
+ALTER TABLE tickets
+  ADD COLUMN IF NOT EXISTS phone_country TEXT,
+  ADD COLUMN IF NOT EXISTS password_hash TEXT;
 
 CREATE TABLE IF NOT EXISTS app_settings (
   key TEXT PRIMARY KEY,

@@ -9,6 +9,7 @@
     "db:init": "psql \"$DATABASE_URL\" -f schema.sql"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "multer": "^2.1.1",

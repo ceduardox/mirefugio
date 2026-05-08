@@ -1,13 +1,15 @@
 :root {
   --red: #d71920;
+  --red-dark: #a81218;
   --ink: #171717;
-  --muted: #666;
+  --muted: #6f6460;
   --line: #e8e1dc;
-  --paper: #fffaf6;
+  --paper: #fff7ef;
   --panel: #ffffff;
   --green: #197a4b;
   --amber: #a35f00;
-  --shadow: 0 18px 55px rgba(23, 23, 23, 0.12);
+  --shadow: 0 24px 70px rgba(64, 31, 24, 0.14);
+  --soft-shadow: 0 10px 26px rgba(64, 31, 24, 0.09);
 }
 
 * {
@@ -18,10 +20,11 @@ body {
   margin: 0;
   min-height: 100vh;
   color: var(--ink);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: Manrope, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background:
-    linear-gradient(135deg, rgba(215, 25, 32, 0.08), transparent 35%),
-    linear-gradient(315deg, rgba(25, 122, 75, 0.07), transparent 38%),
+    radial-gradient(circle at 12% 12%, rgba(215, 25, 32, 0.11), transparent 30%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), transparent 35%),
+    linear-gradient(315deg, rgba(25, 122, 75, 0.08), transparent 38%),
     var(--paper);
 }
 
@@ -31,7 +34,8 @@ a {
 }
 
 button,
-input {
+input,
+.iti {
   font: inherit;
 }
 
@@ -52,9 +56,9 @@ input {
 .purchase-panel {
   min-height: calc(100vh - 64px);
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(390px, 0.95fr);
   align-items: center;
-  gap: 36px;
+  gap: 44px;
 }
 
 .brand-block h1,
@@ -68,6 +72,14 @@ input {
 
 .content-card h1 {
   font-size: clamp(1.8rem, 4vw, 3rem);
+}
+
+.brand-block h1,
+.status-hero h1,
+.content-card h1,
+.ticket-card h2,
+.form-heading strong {
+  font-family: Sora, Manrope, ui-sans-serif, system-ui, sans-serif;
 }
 
 .lead,
@@ -88,9 +100,10 @@ input {
 }
 
 .brand-mark.large {
-  width: min(220px, 42vw);
+  width: min(210px, 42vw);
   height: auto;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--soft-shadow);
 }
 
 .eyebrow {
@@ -116,7 +129,8 @@ input {
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.75);
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow: var(--soft-shadow);
 }
 
 .form-card,
@@ -130,9 +144,37 @@ input {
 }
 
 .form-card {
-  padding: 28px;
+  padding: 30px;
   display: grid;
-  gap: 18px;
+  gap: 16px;
+  position: relative;
+}
+
+.form-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(90deg, var(--red), #171717, var(--green));
+}
+
+.form-heading {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.form-heading span {
+  color: var(--red);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.form-heading strong {
+  font-size: 1.35rem;
 }
 
 label {
@@ -144,22 +186,35 @@ label {
 
 input[type="text"],
 input[type="email"],
-input:not([type]) {
+input[type="password"],
+input[type="tel"],
+input:not([type]),
+.iti {
   width: 100%;
 }
 
 input {
-  min-height: 48px;
+  min-height: 52px;
   border: 1px solid #d8d0ca;
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 13px 14px;
   background: #fff;
   color: var(--ink);
+  box-shadow: 0 1px 0 rgba(23, 23, 23, 0.03);
 }
 
-input:focus {
+input:focus,
+.iti:focus-within input {
   outline: 3px solid rgba(215, 25, 32, 0.18);
   border-color: var(--red);
+}
+
+.iti input {
+  width: 100%;
+}
+
+.iti__selected-country {
+  border-radius: 8px 0 0 8px;
 }
 
 .primary-btn,
@@ -179,14 +234,16 @@ input:focus {
 }
 
 .primary-btn {
-  background: var(--red);
+  background: linear-gradient(135deg, var(--red), var(--red-dark));
   color: #fff;
+  box-shadow: 0 12px 24px rgba(215, 25, 32, 0.24);
 }
 
 .ghost-btn {
   border: 1px solid var(--line);
   background: #fff;
   color: var(--ink);
+  box-shadow: var(--soft-shadow);
 }
 
 .danger-btn {
