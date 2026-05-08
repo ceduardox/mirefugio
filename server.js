@@ -899,7 +899,7 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
         </div>
         <div class="admin-actions">
           <a class="ghost-btn" href="/t/${ticket.public_id}" target="_blank">${icon('eye')}<span>Ver</span></a>
-          ${ticket.receipt_uploaded_at ? `<a class="ghost-btn" href="/admin/tickets/${ticket.id}/receipt" target="_blank">${icon('file')}<span>Comprobante</span></a>` : ''}
+          ${ticket.receipt_uploaded_at ? `<button class="ghost-btn" type="button" data-open-receipt data-receipt-url="/admin/tickets/${ticket.id}/receipt" data-receipt-title="${escapeHtml(ticket.buyer_name || 'Comprobante')}">${icon('file')}<span>Comprobante</span></button>` : ''}
           ${ticket.receipt_uploaded_at ? `<form method="post" action="/admin/tickets/${ticket.id}/approve" data-confirm="Aprobar este comprobante y generar ticket?"><button class="primary-btn" type="submit">${icon('check')}<span>Aprobar</span></button></form>` : `<button class="ghost-btn" type="button" disabled>${icon('file')}<span>Sin comprobante</span></button>`}
           <details class="observe-box">
             <summary>${icon('alert')}<span>Observar</span></summary>
@@ -955,6 +955,22 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
           </div>
           <div class="admin-list">${items || '<p>No hay tickets todavia.</p>'}</div>
         </section>
+        <dialog class="receipt-modal" data-receipt-modal>
+          <div class="receipt-modal-card">
+            <div class="modal-heading">
+              <div>
+                <p class="eyebrow">Comprobante</p>
+                <h2 data-receipt-modal-title>Comprobante recibido</h2>
+              </div>
+              <button class="icon-btn" type="button" data-close-receipt aria-label="Cerrar comprobante">x</button>
+            </div>
+            <iframe data-receipt-frame title="Comprobante de pago"></iframe>
+            <div class="modal-actions">
+              <a class="ghost-btn" data-receipt-open href="#" target="_blank" rel="noopener">${icon('eye')}<span>Abrir en nueva pestana</span></a>
+              <a class="ghost-btn" data-receipt-download href="#" download>${icon('download')}<span>Descargar</span></a>
+            </div>
+          </div>
+        </dialog>
       </main>
     `));
   } catch (error) {

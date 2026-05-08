@@ -1,5 +1,11 @@
 const qrModal = document.querySelector('[data-qr-modal]');
 const qrClose = document.querySelector('[data-close-qr]');
+const receiptModal = document.querySelector('[data-receipt-modal]');
+const receiptClose = document.querySelector('[data-close-receipt]');
+const receiptFrame = document.querySelector('[data-receipt-frame]');
+const receiptTitle = document.querySelector('[data-receipt-modal-title]');
+const receiptOpen = document.querySelector('[data-receipt-open]');
+const receiptDownload = document.querySelector('[data-receipt-download]');
 const phoneInput = document.querySelector('#phone-input');
 const phoneFull = document.querySelector('#phone-full');
 const phoneCountry = document.querySelector('#phone-country');
@@ -20,6 +26,42 @@ if (qrModal) {
 
 if (qrClose && qrModal) {
   qrClose.addEventListener('click', () => qrModal.close());
+}
+
+document.querySelectorAll('[data-open-receipt]').forEach((button) => {
+  button.addEventListener('click', () => {
+    if (!receiptModal || !receiptFrame) return;
+    const url = button.dataset.receiptUrl || '';
+    receiptFrame.src = url;
+    if (receiptTitle) {
+      receiptTitle.textContent = button.dataset.receiptTitle || 'Comprobante recibido';
+    }
+    if (receiptOpen) {
+      receiptOpen.href = url;
+    }
+    if (receiptDownload) {
+      receiptDownload.href = url;
+    }
+    receiptModal.showModal();
+  });
+});
+
+if (receiptModal) {
+  receiptModal.addEventListener('click', (event) => {
+    if (event.target === receiptModal) {
+      receiptModal.close();
+    }
+  });
+
+  receiptModal.addEventListener('close', () => {
+    if (receiptFrame) {
+      receiptFrame.src = 'about:blank';
+    }
+  });
+}
+
+if (receiptClose && receiptModal) {
+  receiptClose.addEventListener('click', () => receiptModal.close());
 }
 
 document.querySelectorAll('[data-copy]').forEach((button) => {

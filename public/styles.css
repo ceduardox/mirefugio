@@ -1206,6 +1206,55 @@ button:disabled,
   box-shadow: var(--soft-shadow);
 }
 
+.receipt-modal {
+  width: min(920px, calc(100% - 28px));
+  max-height: min(92vh, 860px);
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: var(--shadow);
+}
+
+.receipt-modal::backdrop {
+  background: rgba(24, 19, 17, 0.58);
+  backdrop-filter: blur(6px);
+}
+
+.receipt-modal-card {
+  display: grid;
+  gap: 16px;
+  padding: clamp(18px, 3vw, 26px);
+  border: 1px solid rgba(64, 31, 24, 0.1);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 247, 0.96)),
+    #fff;
+}
+
+.modal-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(64, 31, 24, 0.08);
+}
+
+.modal-heading h2 {
+  margin: 0;
+  font-family: Sora, Manrope, sans-serif;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+}
+
+.receipt-modal iframe {
+  width: 100%;
+  height: min(66vh, 620px);
+  border: 1px solid rgba(64, 31, 24, 0.1);
+  border-radius: 8px;
+  background: #fff;
+}
+
 .site-header {
   position: sticky;
   top: 0;
