@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" role="img" aria-labelledby="title">
+  <title id="title">Huella solidaria</title>
+  <rect width="140" height="140" rx="28" fill="#fffaf6"/>
+  <circle cx="43" cy="41" r="16" fill="#d71920"/>
+  <circle cx="70" cy="30" r="17" fill="#d71920"/>
+  <circle cx="97" cy="41" r="16" fill="#d71920"/>
+  <circle cx="34" cy="72" r="15" fill="#181311"/>
+  <circle cx="106" cy="72" r="15" fill="#181311"/>
+  <path d="M70 61c31 0 47 38 26 55-13 10-25-1-26-1s-13 11-26 1C23 99 39 61 70 61z" fill="#181311"/>
+</svg>

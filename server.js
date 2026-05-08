@@ -281,6 +281,14 @@ app.get('/', requireDb, (_req, res) => {
               <small>Cada ticket suma al cuidado diario del refugio.</small>
             </div>
           </section>
+          <section class="dog-feature" aria-label="Mi Refugio ayuda a perritos">
+            <img src="/assets/refuge-dog-scene.svg" alt="Perrito frente al refugio Mi Refugio SC">
+            <div>
+              <p class="eyebrow">Causa solidaria</p>
+              <h2>Tu ticket deja huella</h2>
+              <p>La rifa ayuda a sostener alimento, rescates y atencion para perritos que esperan una nueva oportunidad.</p>
+            </div>
+          </section>
           <section class="process-strip" aria-label="Proceso de compra">
             <div><span>1</span><strong>Registras</strong><small>Nombre y WhatsApp</small></div>
             <div><span>2</span><strong>Pagas QR</strong><small>Desde tu banco</small></div>
