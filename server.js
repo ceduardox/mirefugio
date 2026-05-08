@@ -106,7 +106,17 @@ function sessionPublicId(req) {
   return verifySession(parseCookies(req).mi_refugio_session);
 }
 
-function setSessionCookie(res, publicId, remember) {
+function requestBaseUrl(req = null) {
+  const host = req?.headers?.['x-forwarded-host'] || req?.headers?.host;
+  const configured = process.env.PUBLIC_BASE_URL;
+  if (!host && configured) return configured.replace(/\/$/, '');
+  if (!host) return baseUrl;
+  const protoHeader = req.headers['x-forwarded-proto'];
+  const proto = protoHeader ? String(protoHeader).split(',')[0] : (req.secure ? 'https' : 'http');
+  return `${proto}://${String(host).split(',')[0]}`.replace(/\/$/, '');
+}
+
+function setSessionCookie(req, res, publicId, remember) {
   const parts = [
     `mi_refugio_session=${encodeURIComponent(signSession(publicId))}`,
     'Path=/',
@@ -116,7 +126,7 @@ function setSessionCookie(res, publicId, remember) {
   if (remember) {
     parts.push(`Max-Age=${60 * 60 * 24 * 400}`);
   }
-  if (baseUrl.startsWith('https://')) {
+  if (requestBaseUrl(req).startsWith('https://')) {
     parts.push('Secure');
   }
   res.setHeader('Set-Cookie', parts.join('; '));
@@ -209,32 +219,41 @@ function adminAuth(req, res, next) {
   res.status(401).send('Acceso admin requerido');
 }
 
-function ticketLink(publicId) {
-  return `${baseUrl}/t/${publicId}`;
+function ticketLink(reqOrPublicId, maybePublicId) {
+  const req = maybePublicId ? reqOrPublicId : null;
+  const publicId = maybePublicId || reqOrPublicId;
+  return `${requestBaseUrl(req)}/t/${publicId}`;
 }
 
-function raffleShareText() {
+function raffleShareText(req = null) {
   return [
     `Participa en ${raffleTitle} de Mi Refugio SC.`,
     `Con cada ticket apoyamos alimento, rescates y atencion para perritos que necesitan una nueva oportunidad.`,
     `Premio: ${rafflePrize}`,
     `Aporte por ticket: ${ticketPriceLabel}`,
-    `Puedes comprar tu ticket en el enlace de esta invitacion.`,
+    `Puedes comprar tu ticket aqui: ${requestBaseUrl(req)}/#comprar`,
     `Comparte para que mas personas se sumen.`
   ].join('\n');
 }
 
-function absoluteUrl(pathname) {
-  if (!pathname) return baseUrl;
+function absoluteUrl(reqOrPathname, maybePathname) {
+  const req = maybePathname ? reqOrPathname : null;
+  const pathname = maybePathname || reqOrPathname;
+  if (!pathname) return requestBaseUrl(req);
   if (pathname.startsWith('http://') || pathname.startsWith('https://')) return pathname;
-  return `${baseUrl}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
+  return `${requestBaseUrl(req)}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
 }
 
-function page(title, body, meta = {}) {
+function page(reqOrTitle, titleOrBody, bodyOrMeta, maybeMeta = {}) {
+  const hasReq = typeof reqOrTitle === 'object' && reqOrTitle && reqOrTitle.headers;
+  const req = hasReq ? reqOrTitle : null;
+  const title = hasReq ? titleOrBody : reqOrTitle;
+  const body = hasReq ? bodyOrMeta : titleOrBody;
+  const meta = hasReq ? maybeMeta : (bodyOrMeta || {});
   const metaTitle = meta.title || `${title} | Mi Refugio SC`;
   const description = meta.description || `${raffleTitle}. Compra tu ticket solidario, paga por QR y ayuda a los perritos de Mi Refugio SC.`;
-  const url = absoluteUrl(meta.url || '/');
-  const image = absoluteUrl(meta.image || '/assets/refuge-dog-scene.svg');
+  const url = absoluteUrl(req, meta.url || '/');
+  const image = absoluteUrl(req, meta.image || '/assets/refuge-dog-scene.svg');
   return `<!doctype html>
 <html lang="es">
 <head>
@@ -559,7 +578,7 @@ app.post('/login', requireDb, async (req, res, next) => {
       `));
       return;
     }
-    setSessionCookie(res, ticket.public_id, req.body.remember_session === '1');
+    setSessionCookie(req, res, ticket.public_id, req.body.remember_session === '1');
     res.redirect(`/t/${ticket.public_id}`);
   } catch (error) {
     next(error);
@@ -601,7 +620,7 @@ app.post('/tickets', requireDb, async (req, res, next) => {
        RETURNING public_id`,
       [publicId, buyerName, whatsapp, phoneCountry, email, passwordHash]
     );
-    setSessionCookie(res, result.rows[0].public_id, req.body.remember_session === '1');
+    setSessionCookie(req, res, result.rows[0].public_id, req.body.remember_session === '1');
     res.redirect(`/t/${result.rows[0].public_id}`);
   } catch (error) {
     next(error);
@@ -679,13 +698,13 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
     const shareDescription = ticket.status === 'approved'
       ? `${ticket.buyer_name || 'Colaborador'} ya tiene su ticket solidario para ${raffleTitle}.`
       : `${ticket.buyer_name || 'Colaborador'} esta participando en ${raffleTitle}. Ayuda a los perritos de Mi Refugio SC.`;
-    const shareText = raffleShareText();
-    res.send(page('Ticket virtual', `
+    const shareText = raffleShareText(req);
+    res.send(page(req, 'Ticket virtual', `
       <main class="shell narrow">
         <nav class="topbar">
           <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
           <div class="nav-actions">
-            <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl('/#comprar'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">Compartir rifa</button>
+            <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl(req, '/#comprar'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">Compartir rifa</button>
             ${activeSession ? logoutButton() : '<a class="ghost-btn" href="/login">Ingresar</a>'}
           </div>
         </nav>
@@ -709,7 +728,7 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
         <img src="/payment-qr" alt="QR de pago Mi Refugio SC ampliado">
         <div class="modal-actions">
           <a class="primary-btn" href="/payment-qr/download">Descargar QR</a>
-          <button class="ghost-btn" type="button" data-copy="${escapeHtml(ticketLink(ticket.public_id))}">Copiar link</button>
+          <button class="ghost-btn" type="button" data-copy="${escapeHtml(ticketLink(req, ticket.public_id))}">Copiar link</button>
         </div>
       </dialog>
     `, {
