@@ -1126,6 +1126,37 @@ button:disabled,
   margin: 0;
 }
 
+.registered-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  align-items: center;
+}
+
+.status-pill {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(64, 31, 24, 0.09);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.status-pill.ok {
+  border-color: rgba(25, 122, 75, 0.22);
+  background: rgba(232, 248, 239, 0.92);
+  color: var(--green);
+}
+
+.status-pill.muted {
+  color: var(--muted);
+}
+
 .admin-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -876,19 +876,20 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
     const statsResult = await pool.query(`
       SELECT
         COUNT(*)::INT AS total,
+        COUNT(*) FILTER (WHERE status = 'awaiting_receipt')::INT AS awaiting,
         COUNT(*) FILTER (WHERE status = 'pending_review')::INT AS pending,
         COUNT(*) FILTER (WHERE status = 'approved')::INT AS approved,
         COUNT(*) FILTER (WHERE status = 'rejected')::INT AS rejected
       FROM tickets
     `);
-    const stats = statsResult.rows[0] || { total: 0, pending: 0, approved: 0, rejected: 0 };
+    const stats = statsResult.rows[0] || { total: 0, awaiting: 0, pending: 0, approved: 0, rejected: 0 };
     const { rows } = await pool.query(`
-      SELECT id, public_id, ticket_number, buyer_name, whatsapp, status, created_at, receipt_uploaded_at
+      SELECT id, public_id, ticket_number, buyer_name, whatsapp, email, status, created_at, receipt_uploaded_at
       FROM tickets
       ORDER BY
         CASE WHEN status = 'pending_review' THEN 0 WHEN status = 'awaiting_receipt' THEN 1 WHEN status = 'rejected' THEN 2 ELSE 3 END,
         COALESCE(receipt_uploaded_at, created_at) DESC
-      LIMIT 200
+      LIMIT 500
     `);
     const items = rows.map((ticket) => `
       <article class="admin-row ${ticket.status}">
@@ -908,6 +909,20 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
               <button class="danger-btn" type="submit">${icon('save')}<span>Guardar observacion</span></button>
             </form>
           </details>
+        </div>
+      </article>
+    `).join('');
+    const registeredItems = rows.map((ticket) => `
+      <article class="admin-row registered ${ticket.status}">
+        <div>
+          <strong>${escapeHtml(ticket.buyer_name || 'Sin nombre')}</strong>
+          <span>${escapeHtml(ticket.whatsapp || 'Sin WhatsApp')}</span>
+          <small>${escapeHtml(ticket.email || 'Sin correo')} - Registrado: ${new Date(ticket.created_at).toLocaleString('es-BO')}</small>
+        </div>
+        <div class="registered-meta">
+          <span class="status-pill">${escapeHtml(statusCopy(ticket.status))}</span>
+          <span class="status-pill ${ticket.receipt_uploaded_at ? 'ok' : 'muted'}">${ticket.receipt_uploaded_at ? 'Con comprobante' : 'Sin comprobante'}</span>
+          <a class="ghost-btn" href="/t/${ticket.public_id}" target="_blank">${icon('eye')}<span>Ver</span></a>
         </div>
       </article>
     `).join('');
@@ -941,9 +956,9 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
           </div>
         </section>
         <section class="admin-stats" aria-label="Resumen admin">
+          <div><span>${stats.awaiting}</span><strong>Sin comprobante</strong></div>
           <div><span>${stats.pending}</span><strong>En revision</strong></div>
           <div><span>${stats.approved}</span><strong>Aprobados</strong></div>
-          <div><span>${stats.rejected}</span><strong>Observados</strong></div>
           <div><span>${stats.total}</span><strong>Total tickets</strong></div>
         </section>
         <section class="content-card">
@@ -954,6 +969,16 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
             </div>
           </div>
           <div class="admin-list">${items || '<p>No hay tickets todavia.</p>'}</div>
+        </section>
+        <section class="content-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Registrados</p>
+              <h1>Todos los registrados</h1>
+              <p class="muted">Incluye a quienes se registraron pero todavia no subieron comprobante.</p>
+            </div>
+          </div>
+          <div class="admin-list registered-list">${registeredItems || '<p>No hay registrados todavia.</p>'}</div>
         </section>
         <dialog class="receipt-modal" data-receipt-modal>
           <div class="receipt-modal-card">
