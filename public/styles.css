@@ -1286,6 +1286,372 @@ button:disabled,
   background: #fff;
 }
 
+.ticket-shell {
+  width: min(1120px, calc(100% - 32px));
+}
+
+.ticket-topbar {
+  padding: 18px 24px;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 250, 247, 0.9)),
+    #fff;
+}
+
+.ticket-topbar .brand-link img {
+  width: 74px;
+  height: 74px;
+}
+
+.ticket-topbar .brand-link span,
+.ticket-topbar .brand-link strong,
+.ticket-topbar .brand-link small {
+  display: block;
+}
+
+.ticket-topbar .brand-link strong {
+  font-family: Sora, Manrope, sans-serif;
+  font-size: 1.55rem;
+}
+
+.ticket-topbar .brand-link small {
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.tall-action {
+  min-width: 104px;
+  min-height: 84px;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tall-action .btn-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.ticket-status-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.78fr);
+  gap: 22px;
+  min-height: 330px;
+  padding: clamp(26px, 5vw, 44px);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 62% 18%, rgba(246, 178, 88, 0.14), transparent 24%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 247, 0.88));
+}
+
+.ticket-status-hero::before {
+  right: 48%;
+  top: 42px;
+  width: 58px;
+  height: 58px;
+  opacity: 0.12;
+}
+
+.ticket-status-hero::after {
+  content: "";
+  position: absolute;
+  right: 56px;
+  top: 30px;
+  width: 130px;
+  height: 72px;
+  border-top: 4px solid rgba(239, 68, 68, 0.34);
+  border-radius: 50%;
+  transform: rotate(-18deg);
+  pointer-events: none;
+}
+
+.ticket-status-copy {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+}
+
+.ticket-status-copy h1 {
+  max-width: 620px;
+  color: #120f0e;
+  font-family: Sora, Manrope, sans-serif;
+  font-size: clamp(2.5rem, 7vw, 4.65rem);
+  line-height: 1.02;
+}
+
+.ticket-status-copy h1 span {
+  color: var(--red);
+}
+
+.ticket-status-copy p:not(.eyebrow) {
+  max-width: 560px;
+  color: #4f4540;
+  font-size: 1.15rem;
+  line-height: 1.6;
+}
+
+.ticket-status-copy .eyebrow {
+  color: var(--red);
+  font-size: 0.95rem;
+}
+
+.ticket-status-pets {
+  align-self: end;
+  justify-self: end;
+  width: min(420px, 100%);
+  max-height: 300px;
+  object-fit: contain;
+  object-position: bottom right;
+  filter: drop-shadow(0 24px 34px rgba(64, 31, 24, 0.14));
+}
+
+.ticket-status-hero .buyer-row {
+  margin-top: 18px;
+}
+
+.ticket-status-hero .buyer-row span {
+  min-height: 58px;
+  padding: 12px 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.ticket-status-hero .buyer-row .btn-icon {
+  color: var(--green);
+}
+
+.ticket-shell > .progress-track {
+  margin: 0 0 22px;
+  padding: 22px 28px;
+  border: 1px solid rgba(64, 31, 24, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--soft-shadow);
+}
+
+.ticket-shell > .progress-track .progress-step {
+  min-height: 86px;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 4px 14px;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ticket-shell > .progress-track .progress-step::after {
+  right: -12px;
+  top: 35px;
+  width: 22px;
+  height: 22px;
+  background: none;
+  border-top: 2px solid rgba(64, 31, 24, 0.32);
+  border-right: 2px solid rgba(64, 31, 24, 0.32);
+  transform: rotate(45deg);
+  opacity: 1;
+}
+
+.ticket-shell > .progress-track .progress-step:last-child::after {
+  display: none;
+}
+
+.ticket-shell > .progress-track .progress-step span {
+  grid-row: span 2;
+  width: 46px;
+  height: 46px;
+  margin: 0;
+  background: #8f8f8f;
+  box-shadow: 0 6px 14px rgba(64, 31, 24, 0.12);
+}
+
+.ticket-shell > .progress-track .progress-step.done span,
+.ticket-shell > .progress-track .progress-step.active span {
+  background: linear-gradient(135deg, var(--red), #ff5a50);
+}
+
+.ticket-shell > .progress-track .progress-step.active small {
+  color: var(--red);
+}
+
+.payment-card {
+  padding: clamp(22px, 4vw, 34px);
+}
+
+.payment-card .section-title {
+  margin-bottom: 20px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.payment-card .section-title h2 {
+  font-family: Sora, Manrope, sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+}
+
+.payment-card .payment-grid {
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.2fr);
+}
+
+.payment-card .qr-panel,
+.payment-card .upload-box {
+  padding: clamp(18px, 3vw, 26px);
+  border: 1px solid rgba(64, 31, 24, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 10px 28px rgba(64, 31, 24, 0.06);
+}
+
+.payment-card .qr-panel h3,
+.payment-card .upload-box h2 {
+  margin: 0;
+  font-family: Sora, Manrope, sans-serif;
+  text-align: center;
+}
+
+.payment-card .qr-frame {
+  width: min(330px, 100%);
+  margin: 0 auto;
+  padding: 8px;
+  box-shadow: none;
+}
+
+.payment-card .qr-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.payment-card .qr-actions .ghost-btn:last-child {
+  color: var(--red);
+  border-color: rgba(215, 25, 32, 0.42);
+}
+
+.payment-card .file-drop {
+  min-height: 250px;
+  border-style: dashed;
+  border-color: rgba(215, 25, 32, 0.55);
+  background:
+    radial-gradient(circle at 50% 20%, rgba(215, 25, 32, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(255, 251, 249, 0.96), rgba(255, 245, 243, 0.92));
+}
+
+.payment-card .file-icon {
+  width: 86px;
+  height: 86px;
+  border-radius: 999px;
+  background: rgba(215, 25, 32, 0.1);
+  color: var(--red);
+  font-size: 0;
+}
+
+.payment-card .file-icon::before {
+  content: "+";
+  font-size: 2.3rem;
+  line-height: 1;
+}
+
+.payment-card .primary-btn {
+  min-height: 68px;
+  font-size: 1.05rem;
+}
+
+.ticket-state-card,
+.ticket-help-card,
+.ticket-benefits,
+.thanks-strip {
+  display: grid;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 20px 28px;
+  border: 1px solid rgba(64, 31, 24, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: var(--soft-shadow);
+}
+
+.ticket-state-card {
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+}
+
+.ticket-state-card img {
+  width: 78px;
+  height: 78px;
+  object-fit: contain;
+}
+
+.ticket-state-card h2,
+.ticket-help-card h2,
+.thanks-strip h2 {
+  margin: 0 0 6px;
+  font-family: Sora, Manrope, sans-serif;
+}
+
+.ticket-state-card p,
+.ticket-help-card p,
+.thanks-strip p,
+.ticket-benefits span {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.ticket-help-card {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.6fr);
+  background:
+    linear-gradient(135deg, rgba(242, 255, 247, 0.96), rgba(255, 255, 255, 0.9)),
+    #fff;
+}
+
+.whatsapp-btn {
+  min-height: 64px;
+  background: linear-gradient(135deg, #1ec95a, #0c993f);
+  box-shadow: 0 14px 28px rgba(12, 153, 63, 0.22);
+}
+
+.ticket-benefits {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ticket-benefits article {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.ticket-benefits .btn-icon {
+  width: 46px;
+  height: 46px;
+  padding: 10px;
+  border-radius: 999px;
+  background: rgba(215, 25, 32, 0.08);
+  color: var(--red);
+}
+
+.ticket-benefits strong,
+.ticket-benefits span {
+  display: block;
+}
+
+.thanks-strip {
+  grid-template-columns: minmax(0, 1fr) 180px;
+  min-height: 112px;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(255, 239, 237, 0.94), rgba(255, 255, 255, 0.9));
+}
+
+.thanks-strip img {
+  width: 190px;
+  height: 126px;
+  object-fit: cover;
+  object-position: center top;
+  align-self: end;
+}
+
 .site-header {
   position: sticky;
   top: 0;
@@ -2147,5 +2513,62 @@ button:disabled,
   .ticket-card img {
     left: 24px;
     right: auto;
+  }
+
+  .ticket-topbar,
+  .ticket-status-hero,
+  .ticket-state-card,
+  .ticket-help-card,
+  .thanks-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-topbar .nav-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tall-action {
+    min-height: 56px;
+    flex-direction: row;
+  }
+
+  .tall-action .btn-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .ticket-status-pets {
+    justify-self: center;
+    max-height: 220px;
+  }
+
+  .ticket-shell > .progress-track {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .ticket-shell > .progress-track .progress-step::after {
+    display: none;
+  }
+
+  .payment-card .payment-grid,
+  .ticket-benefits {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-state-card {
+    text-align: center;
+  }
+
+  .ticket-state-card img {
+    margin: 0 auto;
+  }
+
+  .ticket-help-card .primary-btn {
+    width: 100%;
+  }
+
+  .thanks-strip img {
+    justify-self: center;
   }
 }

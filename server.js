@@ -201,6 +201,13 @@ function progressMarkup(status) {
   </div>`;
 }
 
+function whatsappContactLink() {
+  const firstContact = String(raffleContact).split('-')[0] || '';
+  const digits = firstContact.replace(/\D/g, '');
+  const phone = digits.startsWith('591') ? digits : `591${digits}`;
+  return `https://wa.me/${phone}`;
+}
+
 function requireDb(req, res, next) {
   if (!pool) {
     res.status(503).send(page('Base de datos requerida', `
@@ -769,6 +776,7 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
         ${ticket.status === 'rejected' ? `<div class="state-alert rejected"><strong>Comprobante observado</strong><p>${escapeHtml(ticket.admin_note || 'El comprobante necesita revision. Sube una imagen o PDF nuevo para continuar.')}</p></div>` : ''}
         <div class="payment-grid">
           <div class="qr-panel">
+            <h3>Paga con QR</h3>
             <button class="qr-frame" type="button" data-open-qr>
               <img src="/payment-qr" alt="QR de pago Mi Refugio SC">
             </button>
@@ -802,27 +810,59 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
       ? `${ticket.buyer_name || 'Colaborador'} ya tiene su ticket solidario para ${raffleTitle}.`
       : `${ticket.buyer_name || 'Colaborador'} esta participando en ${raffleTitle}. Ayuda a los perritos de Mi Refugio SC.`;
     const shareText = raffleShareText(req);
+    const whatsappLink = whatsappContactLink();
     res.send(page(req, 'Ticket virtual', `
-      <main class="shell narrow">
-        <nav class="topbar">
-          <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
+      <main class="shell narrow ticket-shell">
+        <nav class="topbar ticket-topbar">
+          <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span><strong>Mi Refugio SC</strong><small>Rifas solidarias</small></span></a>
           <div class="nav-actions">
-            <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl(req, '/'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">${icon('share')}<span>Comparte con tus amigos</span></button>
+            <button class="ghost-btn tall-action" type="button" data-share="${escapeHtml(absoluteUrl(req, '/'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">${icon('share')}<span>Compartir</span></button>
             ${activeSession ? logoutButton() : ''}
           </div>
         </nav>
-        <section class="status-hero ${ticket.status}">
-          <p class="eyebrow">${escapeHtml(statusCopy(ticket.status))}</p>
-          <h1>${ticket.status === 'approved' ? 'Tu ticket esta aprobado' : 'Tu compra esta registrada'}</h1>
-          <p>Guarda este enlace para revisar el avance y compartir tu ticket cuando este aprobado.</p>
-          <div class="buyer-row">
-            <span>${escapeHtml(ticket.buyer_name || 'Colaborador')}</span>
-            <span>${escapeHtml(ticket.whatsapp || '')}</span>
+        <section class="status-hero ticket-status-hero ${ticket.status}">
+          <div class="ticket-status-copy">
+            <p class="eyebrow">${escapeHtml(statusCopy(ticket.status))}</p>
+            <h1>${ticket.status === 'approved' ? 'Tu ticket esta aprobado' : 'Tu compra esta <span>registrada</span>'}</h1>
+            <p>Guarda este enlace para revisar el avance y compartir tu ticket cuando este aprobado.</p>
+            <div class="buyer-row">
+              <span>${icon('userPlus')}${escapeHtml(ticket.buyer_name || 'Colaborador')}</span>
+              <span>${icon('share')}${escapeHtml(ticket.whatsapp || '')}</span>
+            </div>
           </div>
-          ${progressMarkup(ticket.status)}
+          <img class="ticket-status-pets" src="/assets/refuge-dog-scene.svg" alt="Perritos de Mi Refugio SC">
         </section>
+        ${progressMarkup(ticket.status)}
         ${approvedTicket}
         ${uploadForm}
+        <section class="ticket-state-card">
+          <img src="/logo" alt="Mi Refugio SC">
+          <div>
+            <h2>Estado actual</h2>
+            <p>Tu ticket se aprueba cuando el admin confirme el pago.</p>
+          </div>
+          <span class="status-pill">${escapeHtml(statusCopy(ticket.status))}</span>
+        </section>
+        <section class="ticket-help-card">
+          <div>
+            <h2>¿Dudas o problemas?</h2>
+            <p>Escribenos por WhatsApp, estamos para ayudarte.</p>
+          </div>
+          <a class="primary-btn whatsapp-btn" href="${escapeHtml(whatsappLink)}" target="_blank" rel="noopener">${icon('share')}<span>WhatsApp</span></a>
+        </section>
+        <section class="ticket-benefits">
+          <article>${icon('check')}<div><strong>Pago seguro</strong><span>Tus datos estan protegidos.</span></div></article>
+          <article>${icon('eye')}<div><strong>Revision manual</strong><span>Validamos tu pago lo antes posible.</span></div></article>
+          <article>${icon('file')}<div><strong>Ticket unico</strong><span>Recibiras un numero digital.</span></div></article>
+          <article>${icon('alert')}<div><strong>Apoyas vidas</strong><span>Tu ayuda cambia el futuro de muchos perritos.</span></div></article>
+        </section>
+        <section class="thanks-strip">
+          <div>
+            <h2>Gracias por ser parte de Mi Refugio SC</h2>
+            <p>Cada ticket nos acerca mas a nuestro hogar definitivo.</p>
+          </div>
+          <img src="/assets/refuge-dog-scene.svg" alt="Perrito agradecido">
+        </section>
       </main>
       <dialog class="qr-modal" data-qr-modal>
         <button class="icon-btn" type="button" data-close-qr aria-label="Cerrar">x</button>
