@@ -93,6 +93,12 @@ textarea,
   backdrop-filter: blur(16px);
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .shell.narrow {
   width: min(920px, calc(100% - 32px));
 }
@@ -116,6 +122,52 @@ textarea,
     linear-gradient(90deg, rgba(215, 25, 32, 0.05), rgba(15, 118, 110, 0.05));
   box-shadow: var(--shadow);
   overflow: hidden;
+}
+
+.auth-layout {
+  display: grid;
+  gap: 20px;
+}
+
+.auth-intro {
+  position: relative;
+  padding: clamp(22px, 4vw, 34px);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 239, 237, 0.74)),
+    #fff;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.auth-intro::after {
+  content: "";
+  position: absolute;
+  right: 24px;
+  top: 24px;
+  width: 92px;
+  height: 92px;
+  background: url("/assets/paw-badge.svg") center / contain no-repeat;
+  opacity: 0.1;
+}
+
+.auth-intro h1 {
+  margin: 0;
+  max-width: 560px;
+  font-family: Sora, Manrope, sans-serif;
+  font-size: clamp(2rem, 7vw, 3.6rem);
+  line-height: 1;
+}
+
+.auth-intro p:last-child {
+  max-width: 580px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.auth-card {
+  max-width: none;
 }
 
 .purchase-panel::before {
@@ -1274,6 +1326,15 @@ button:disabled,
   .landing-nav,
   .hero-logo-row {
     flex-direction: column;
+  }
+
+  .nav-actions {
+    display: grid;
+    width: 100%;
+  }
+
+  .nav-actions a {
+    width: 100%;
   }
 
   .brand-block h1,

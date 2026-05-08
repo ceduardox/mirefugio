@@ -250,7 +250,10 @@ app.get('/', requireDb, (_req, res) => {
     <main class="shell">
       <nav class="landing-nav">
         <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
-        <a class="ghost-btn" href="#comprar">Comprar ticket</a>
+        <div class="nav-actions">
+          <a class="ghost-btn" href="/login">Ingresar</a>
+          <a class="primary-btn" href="#comprar">Registrarme</a>
+        </div>
       </nav>
       <section class="purchase-panel">
         <div class="brand-block">
@@ -325,6 +328,78 @@ app.get('/', requireDb, (_req, res) => {
       </section>
     </main>
   `));
+});
+
+app.get('/login', requireDb, (_req, res) => {
+  res.send(page('Ingresar', `
+    <main class="shell compact">
+      <nav class="topbar">
+        <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
+        <a class="ghost-btn" href="/#comprar">Registrarme</a>
+      </nav>
+      <section class="auth-layout">
+        <div class="auth-intro">
+          <img class="brand-mark large" src="/logo" alt="Mi Refugio SC">
+          <p class="eyebrow">Consulta tu ticket</p>
+          <h1>Ingresa para ver el estado de tu ticket</h1>
+          <p>Usa el mismo WhatsApp y contrasena que registraste al comprar. Te llevaremos a tu ticket mas reciente.</p>
+        </div>
+        <form class="form-card auth-card" method="post" action="/login" data-loading-form>
+          <div class="form-heading">
+            <span>Login</span>
+            <strong>Acceso comprador</strong>
+            <small>Si aun no compraste, registrate para generar tu ticket.</small>
+          </div>
+          <label>Numero de telefono
+            <input id="phone-input" name="phone_display" type="tel" inputmode="tel" autocomplete="tel" placeholder="Tu numero de WhatsApp" required>
+            <input id="phone-full" name="whatsapp" type="hidden">
+            <input id="phone-country" name="phone_country" type="hidden">
+          </label>
+          <label>Contrasena
+            <input name="password" type="password" autocomplete="current-password" minlength="6" placeholder="Tu contrasena" required>
+          </label>
+          <button class="primary-btn" type="submit">Ingresar a mi ticket</button>
+          <p class="trust-note">No necesitas recordar el link si usas el mismo telefono y contrasena.</p>
+        </form>
+      </section>
+    </main>
+  `));
+});
+
+app.post('/login', requireDb, async (req, res, next) => {
+  try {
+    const whatsapp = normalizeWhatsapp(req.body.whatsapp || req.body.phone_display || '');
+    const password = String(req.body.password || '');
+    const { rows } = await pool.query(
+      `SELECT public_id, password_hash
+       FROM tickets
+       WHERE whatsapp = $1 AND password_hash IS NOT NULL
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [whatsapp]
+    );
+    const ticket = rows[0];
+    const isValid = ticket ? await bcrypt.compare(password, ticket.password_hash) : false;
+    if (!isValid) {
+      res.status(401).send(page('No pudimos ingresar', `
+        <main class="shell compact">
+          <section class="notice">
+            <img class="brand-mark" src="/logo" alt="Mi Refugio SC">
+            <h1>No encontramos ese acceso</h1>
+            <p>Revisa tu WhatsApp y contrasena. Deben ser los mismos datos usados al registrarte.</p>
+            <div class="modal-actions">
+              <a class="primary-btn" href="/login">Intentar de nuevo</a>
+              <a class="ghost-btn" href="/#comprar">Registrarme</a>
+            </div>
+          </section>
+        </main>
+      `));
+      return;
+    }
+    res.redirect(`/t/${ticket.public_id}`);
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post('/tickets', requireDb, async (req, res, next) => {
