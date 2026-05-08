@@ -231,7 +231,7 @@ function raffleShareText(req = null) {
     `Con cada ticket apoyamos alimento, rescates y atencion para perritos que necesitan una nueva oportunidad.`,
     `Premio: ${rafflePrize}`,
     `Aporte por ticket: ${ticketPriceLabel}`,
-    `Puedes comprar tu ticket aqui: ${requestBaseUrl(req)}/#comprar`,
+    `Puedes comprar tu ticket en el enlace de esta invitacion.`,
     `Comparte para que mas personas se sumen.`
   ].join('\n');
 }
@@ -415,7 +415,7 @@ app.get('/og/ticket/:publicId.svg', requireDb, async (req, res, next) => {
 
 app.get('/', requireDb, (req, res) => {
   const activeSession = sessionPublicId(req);
-  res.send(page('Comprar ticket', `
+  res.send(page(req, 'Comprar ticket', `
     <main class="shell">
       <nav class="landing-nav">
         <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
@@ -500,7 +500,13 @@ app.get('/', requireDb, (req, res) => {
         </form>
       </section>
     </main>
-  `));
+  `, {
+    title: `${raffleTitle} | Mi Refugio SC`,
+    description: `Participa en la rifa solidaria de Mi Refugio SC. Con cada ticket apoyas alimento, rescates y atencion para perritos. Premio: ${rafflePrize}. Aporte: ${ticketPriceLabel}.`,
+    url: '/',
+    image: '/assets/refuge-dog-scene.svg',
+    imageAlt: 'Rifa solidaria Mi Refugio SC para ayudar a perritos'
+  }));
 });
 
 app.get('/login', requireDb, (req, res) => {
@@ -704,7 +710,7 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
         <nav class="topbar">
           <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
           <div class="nav-actions">
-            <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl(req, '/#comprar'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">Compartir rifa</button>
+            <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl(req, '/'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">Compartir rifa</button>
             ${activeSession ? logoutButton() : '<a class="ghost-btn" href="/login">Ingresar</a>'}
           </div>
         </nav>
