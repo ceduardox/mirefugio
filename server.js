@@ -154,15 +154,13 @@ function ticketLink(publicId) {
   return `${baseUrl}/t/${publicId}`;
 }
 
-function whatsappShareText(ticket) {
-  const name = ticket.buyer_name || 'un colaborador';
-  const number = ticket.ticket_number ? `\nTicket: ${ticket.ticket_number}` : '';
+function raffleShareText() {
   return [
-    `Estoy participando en ${raffleTitle} de Mi Refugio SC.`,
+    `Participa en ${raffleTitle} de Mi Refugio SC.`,
     `Con cada ticket apoyamos alimento, rescates y atencion para perritos que necesitan una nueva oportunidad.`,
     `Premio: ${rafflePrize}`,
-    `Aporte: ${ticketPriceLabel}${number}`,
-    `Tambien puedes participar o apoyar aqui: ${ticketLink(ticket.public_id)}`,
+    `Aporte por ticket: ${ticketPriceLabel}`,
+    `Puedes comprar tu ticket en el enlace de esta invitacion.`,
     `Comparte para que mas personas se sumen.`
   ].join('\n');
 }
@@ -600,12 +598,12 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
     const shareDescription = ticket.status === 'approved'
       ? `${ticket.buyer_name || 'Colaborador'} ya tiene su ticket solidario para ${raffleTitle}.`
       : `${ticket.buyer_name || 'Colaborador'} esta participando en ${raffleTitle}. Ayuda a los perritos de Mi Refugio SC.`;
-    const shareText = whatsappShareText(ticket);
+    const shareText = raffleShareText();
     res.send(page('Ticket virtual', `
       <main class="shell narrow">
         <nav class="topbar">
           <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
-          <button class="ghost-btn" type="button" data-share="${escapeHtml(ticketLink(ticket.public_id))}" data-share-title="${escapeHtml(shareTitle)}" data-share-text="${escapeHtml(shareText)}">Compartir por WhatsApp</button>
+          <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl('/#comprar'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">Compartir rifa</button>
         </nav>
         <section class="status-hero ${ticket.status}">
           <p class="eyebrow">${escapeHtml(statusCopy(ticket.status))}</p>
