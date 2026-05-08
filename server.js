@@ -622,8 +622,7 @@ app.post('/login', requireDb, async (req, res, next) => {
 
 app.post('/logout', (req, res) => {
   clearSessionCookie(res);
-  const nextUrl = String(req.headers.referer || '/');
-  res.redirect(nextUrl.startsWith(baseUrl) ? nextUrl : '/');
+  res.redirect('/login');
 });
 
 app.post('/tickets', requireDb, async (req, res, next) => {
