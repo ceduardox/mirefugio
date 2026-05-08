@@ -638,6 +638,12 @@ input:focus,
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
 }
 
+.btn-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
 .primary-btn:hover,
 .ghost-btn:hover,
 .danger-btn:hover,
@@ -1168,6 +1174,7 @@ button:disabled,
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   border-radius: 8px;
   background: linear-gradient(135deg, #332927, #171311);
   color: #fff;

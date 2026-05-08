@@ -138,7 +138,24 @@ function clearSessionCookie(res) {
 }
 
 function logoutButton() {
-  return `<form class="inline-form" method="post" action="/logout"><button class="ghost-btn" type="submit">Cerrar sesion</button></form>`;
+  return `<form class="inline-form" method="post" action="/logout"><button class="ghost-btn" type="submit">${icon('logout')}<span>Cerrar sesion</span></button></form>`;
+}
+
+function icon(name) {
+  const icons = {
+    login: '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>',
+    userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/>',
+    share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4"/><path d="M15.4 6.5l-6.8 4"/>',
+    download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
+    zoom: '<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/>',
+    upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>',
+    check: '<path d="M20 6L9 17l-5-5"/>',
+    eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+    file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+    save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>',
+    alert: '<path d="M10.3 3.3L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/>'
+  };
+  return `<svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[name] || ''}</svg>`;
 }
 
 function safeDownloadName(value = '') {
@@ -431,8 +448,8 @@ app.get('/', requireDb, (req, res) => {
       <nav class="landing-nav">
         <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
         <div class="nav-actions">
-          ${activeSession ? `<a class="ghost-btn" href="/t/${activeSession}">Mi ticket</a>${logoutButton()}` : '<a class="ghost-btn" href="/login">Ingresar</a>'}
-          <a class="primary-btn" href="#comprar">Registrarme</a>
+          ${activeSession ? `<a class="ghost-btn" href="/t/${activeSession}">${icon('file')}<span>Mi ticket</span></a>${logoutButton()}` : `<a class="ghost-btn" href="/login">${icon('login')}<span>Ingresar</span></a>`}
+          <a class="primary-btn" href="#comprar">${icon('userPlus')}<span>Registrarme</span></a>
         </div>
       </nav>
       <section class="purchase-panel">
@@ -507,7 +524,7 @@ app.get('/', requireDb, (req, res) => {
             <input name="remember_session" type="checkbox" value="1" checked>
             <span>Guardar sesion en este dispositivo</span>
           </label>
-          <button class="primary-btn" type="submit">Comprar ticket solidario</button>
+          <button class="primary-btn" type="submit">${icon('check')}<span>Comprar ticket solidario</span></button>
           <p class="trust-note">Despues veras el QR, subiras tu comprobante y podras volver con tu link.</p>
         </form>
       </section>
@@ -528,8 +545,8 @@ app.get('/login', requireDb, (req, res) => {
       <nav class="topbar">
         <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
         <div class="nav-actions">
-          ${activeSession ? `<a class="ghost-btn" href="/t/${activeSession}">Mi ticket</a>${logoutButton()}` : ''}
-          <a class="ghost-btn" href="/#comprar">Registrarme</a>
+          ${activeSession ? `<a class="ghost-btn" href="/t/${activeSession}">${icon('file')}<span>Mi ticket</span></a>${logoutButton()}` : ''}
+          <a class="ghost-btn" href="/#comprar">${icon('userPlus')}<span>Registrarme</span></a>
         </div>
       </nav>
       <section class="auth-layout">
@@ -555,7 +572,7 @@ app.get('/login', requireDb, (req, res) => {
             <input name="remember_session" type="checkbox" value="1" checked>
             <span>Guardar sesion en este dispositivo</span>
           </label>
-          <button class="primary-btn" type="submit">Ingresar a mi ticket</button>
+          <button class="primary-btn" type="submit">${icon('login')}<span>Ingresar a mi ticket</span></button>
           <p class="trust-note">No necesitas recordar el link si usas el mismo WhatsApp/correo y contrasena.</p>
         </form>
       </section>
@@ -588,8 +605,8 @@ app.post('/login', requireDb, async (req, res, next) => {
             <h1>No encontramos ese acceso</h1>
             <p>Revisa tu WhatsApp/correo y contrasena. Deben ser los mismos datos usados al registrarte.</p>
             <div class="modal-actions">
-              <a class="primary-btn" href="/login">Intentar de nuevo</a>
-              <a class="ghost-btn" href="/#comprar">Registrarme</a>
+              <a class="primary-btn" href="/login">${icon('login')}<span>Intentar de nuevo</span></a>
+              <a class="ghost-btn" href="/#comprar">${icon('userPlus')}<span>Registrarme</span></a>
             </div>
           </section>
         </main>
@@ -625,7 +642,7 @@ app.post('/tickets', requireDb, async (req, res, next) => {
             <img class="brand-mark" src="/logo" alt="Mi Refugio SC">
             <h1>Las contrasenas no coinciden</h1>
             <p>Vuelve al formulario y confirma una contrasena de al menos 6 caracteres.</p>
-            <a class="primary-btn" href="/">Volver</a>
+            <a class="primary-btn" href="/">${icon('login')}<span>Volver</span></a>
           </section>
         </main>
       `));
@@ -688,8 +705,8 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
               <img src="/payment-qr" alt="QR de pago Mi Refugio SC">
             </button>
             <div class="qr-actions">
-              <button class="ghost-btn" type="button" data-open-qr>Ampliar QR</button>
-              <a class="ghost-btn" href="/payment-qr/download">Descargar QR</a>
+              <button class="ghost-btn" type="button" data-open-qr>${icon('zoom')}<span>Ampliar QR</span></button>
+              <a class="ghost-btn" href="/payment-qr/download">${icon('download')}<span>Descargar QR</span></a>
             </div>
           </div>
           <form class="upload-box enhanced-upload" method="post" action="/t/${ticket.public_id}/receipt" enctype="multipart/form-data" data-enhanced-upload>
@@ -703,7 +720,7 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
             </label>
             <div class="file-preview" data-file-preview hidden></div>
             <div class="upload-progress" data-upload-progress hidden><span></span></div>
-            <button class="primary-btn" type="submit">${ticket.status === 'pending_review' ? 'Enviar reemplazo' : 'Enviar comprobante a revision'}</button>
+            <button class="primary-btn" type="submit">${icon('upload')}<span>${ticket.status === 'pending_review' ? 'Enviar reemplazo' : 'Enviar comprobante a revision'}</span></button>
             <p class="trust-note">Tu ticket se aprueba cuando el admin confirme el pago.</p>
           </form>
         </div>
@@ -722,7 +739,7 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
         <nav class="topbar">
           <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
           <div class="nav-actions">
-            <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl(req, '/'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">Comparte con tus amigos</button>
+            <button class="ghost-btn" type="button" data-share="${escapeHtml(absoluteUrl(req, '/'))}" data-share-title="${escapeHtml(raffleTitle)}" data-share-text="${escapeHtml(shareText)}">${icon('share')}<span>Comparte con tus amigos</span></button>
             ${activeSession ? logoutButton() : ''}
           </div>
         </nav>
@@ -745,8 +762,8 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
         <h2>Escanea o descarga el QR</h2>
         <img src="/payment-qr" alt="QR de pago Mi Refugio SC ampliado">
         <div class="modal-actions">
-          <a class="primary-btn" href="/payment-qr/download">Descargar QR</a>
-          <button class="ghost-btn" type="button" data-copy="${escapeHtml(ticketLink(req, ticket.public_id))}">Copiar link</button>
+          <a class="primary-btn" href="/payment-qr/download">${icon('download')}<span>Descargar QR</span></a>
+          <button class="ghost-btn" type="button" data-copy="${escapeHtml(ticketLink(req, ticket.public_id))}">${icon('share')}<span>Copiar link</span></button>
         </div>
       </dialog>
     `, {
@@ -813,14 +830,14 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
           <small>${escapeHtml(statusCopy(ticket.status))} - ${new Date(ticket.created_at).toLocaleString('es-BO')}</small>
         </div>
         <div class="admin-actions">
-          <a class="ghost-btn" href="/t/${ticket.public_id}" target="_blank">Ver</a>
-          ${ticket.receipt_uploaded_at ? `<a class="ghost-btn" href="/admin/tickets/${ticket.id}/receipt" target="_blank">Comprobante</a>` : ''}
-          ${ticket.receipt_uploaded_at ? `<form method="post" action="/admin/tickets/${ticket.id}/approve" data-confirm="Aprobar este comprobante y generar ticket?"><button class="primary-btn" type="submit">Aprobar</button></form>` : '<button class="ghost-btn" type="button" disabled>Sin comprobante</button>'}
+          <a class="ghost-btn" href="/t/${ticket.public_id}" target="_blank">${icon('eye')}<span>Ver</span></a>
+          ${ticket.receipt_uploaded_at ? `<a class="ghost-btn" href="/admin/tickets/${ticket.id}/receipt" target="_blank">${icon('file')}<span>Comprobante</span></a>` : ''}
+          ${ticket.receipt_uploaded_at ? `<form method="post" action="/admin/tickets/${ticket.id}/approve" data-confirm="Aprobar este comprobante y generar ticket?"><button class="primary-btn" type="submit">${icon('check')}<span>Aprobar</span></button></form>` : `<button class="ghost-btn" type="button" disabled>${icon('file')}<span>Sin comprobante</span></button>`}
           <details class="observe-box">
-            <summary>Observar</summary>
+            <summary>${icon('alert')}<span>Observar</span></summary>
             <form method="post" action="/admin/tickets/${ticket.id}/reject" data-loading-form>
               <textarea name="admin_note" rows="2" maxlength="240" placeholder="Motivo para el usuario" required></textarea>
-              <button class="danger-btn" type="submit">Guardar observacion</button>
+              <button class="danger-btn" type="submit">${icon('save')}<span>Guardar observacion</span></button>
             </form>
           </details>
         </div>
@@ -838,7 +855,7 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
               <h1>Imagen de pago</h1>
               <p class="muted">${storedQr ? `QR actualizado: ${new Date(storedQr.updated_at).toLocaleString('es-BO')}` : 'Aun no se subio un QR real. Los usuarios veran un QR temporal.'}</p>
             </div>
-            <a class="ghost-btn" href="/payment-qr" target="_blank">Ver QR actual</a>
+            <a class="ghost-btn" href="/payment-qr" target="_blank">${icon('eye')}<span>Ver QR actual</span></a>
           </div>
           <div class="qr-admin-grid">
             <img class="qr-preview" src="/payment-qr" alt="QR de pago actual">
@@ -851,7 +868,7 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
               </label>
               <div class="file-preview" data-file-preview hidden></div>
               <div class="upload-progress" data-upload-progress hidden><span></span></div>
-              <button class="primary-btn" type="submit">Guardar QR de pago</button>
+              <button class="primary-btn" type="submit">${icon('save')}<span>Guardar QR de pago</span></button>
             </form>
           </div>
         </section>
