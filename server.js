@@ -11,11 +11,12 @@ const { Pool } = require('pg');
 const app = express();
 const port = process.env.PORT || 3000;
 const baseUrl = (process.env.PUBLIC_BASE_URL || `http://localhost:${port}`).replace(/\/$/, '');
-const ticketPriceLabel = process.env.TICKET_PRICE_LABEL || 'Bs 20';
-const raffleTitle = process.env.RAFFLE_TITLE || 'Rifa solidaria Mi Refugio SC';
-const rafflePrize = process.env.RAFFLE_PRIZE || 'Premio sorpresa para ayudar a nuestros perritos';
+const ticketPriceLabel = process.env.TICKET_PRICE_LABEL || '10 Bs';
+const raffleTitle = process.env.RAFFLE_TITLE || 'Venta de rifas Mi Refugio SC';
+const rafflePrize = process.env.RAFFLE_PRIZE || 'Combos de Deb Burgers, queques de chocolate gourmet, media tablita standard en Meow Sushi, chequeo medico con la Dra. Shirley Cayoja en GINECOMED, camita de Canino y muchos premios mas';
 const raffleDrawDate = process.env.RAFFLE_DRAW_DATE || 'Fecha por anunciar';
-const raffleImpact = process.env.RAFFLE_IMPACT || 'Alimento, rescates y atencion veterinaria';
+const raffleImpact = process.env.RAFFLE_IMPACT || 'Ayudanos a cubrir la cuota del terreno de nuestro Refugio';
+const raffleContact = process.env.RAFFLE_CONTACT || '79079879 - 60950976';
 const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
 const sessionSecret = process.env.SESSION_SECRET || adminPassword || 'mi-refugio-session';
 const databaseUrl = process.env.DATABASE_URL;
@@ -231,6 +232,7 @@ function raffleShareText(req = null) {
     `Con cada ticket apoyamos alimento, rescates y atencion para perritos que necesitan una nueva oportunidad.`,
     `Premio: ${rafflePrize}`,
     `Aporte por ticket: ${ticketPriceLabel}`,
+    `Consultas: ${raffleContact}`,
     `Puedes comprar tu ticket en el enlace de esta invitacion.`,
     `Comparte para que mas personas se sumen.`
   ].join('\n');
@@ -448,6 +450,7 @@ app.get('/', requireDb, (req, res) => {
           <div class="quick-facts">
             <span>${escapeHtml(ticketPriceLabel)}</span>
             <span>${escapeHtml(raffleDrawDate)}</span>
+            <span>Consultas ${escapeHtml(raffleContact)}</span>
             <span>Pago seguro por QR</span>
           </div>
           <section class="prize-showcase" aria-label="Premios e impacto">
@@ -459,7 +462,7 @@ app.get('/', requireDb, (req, res) => {
             <div class="prize-card">
               <p class="eyebrow">Tu ayuda cubre</p>
               <h2>${escapeHtml(raffleImpact)}</h2>
-              <small>Cada ticket suma al cuidado diario del refugio.</small>
+              <small>Contactos: ${escapeHtml(raffleContact)}</small>
             </div>
           </section>
           <section class="dog-feature" aria-label="Mi Refugio ayuda a perritos">
@@ -467,7 +470,7 @@ app.get('/', requireDb, (req, res) => {
             <div>
               <p class="eyebrow">Causa solidaria</p>
               <h2>Tu ticket deja huella</h2>
-              <p>La rifa ayuda a sostener alimento, rescates y atencion para perritos que esperan una nueva oportunidad.</p>
+              <p>${escapeHtml(raffleImpact)}. Tambien puedes consultar al ${escapeHtml(raffleContact)}.</p>
             </div>
           </section>
           <section class="process-strip" aria-label="Proceso de compra">
@@ -511,7 +514,7 @@ app.get('/', requireDb, (req, res) => {
     </main>
   `, {
     title: `${raffleTitle} | Mi Refugio SC`,
-    description: `Participa en la rifa solidaria de Mi Refugio SC. Con cada ticket apoyas alimento, rescates y atencion para perritos. Premio: ${rafflePrize}. Aporte: ${ticketPriceLabel}.`,
+    description: `Participa en la rifa solidaria de Mi Refugio SC. ${raffleImpact}. Premio: ${rafflePrize}. Aporte: ${ticketPriceLabel}. Consultas: ${raffleContact}.`,
     url: '/',
     image: '/imagenlogo',
     imageAlt: 'Logo Mi Refugio SC'
