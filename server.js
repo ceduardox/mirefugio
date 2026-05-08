@@ -12,6 +12,10 @@ const app = express();
 const port = process.env.PORT || 3000;
 const baseUrl = (process.env.PUBLIC_BASE_URL || `http://localhost:${port}`).replace(/\/$/, '');
 const ticketPriceLabel = process.env.TICKET_PRICE_LABEL || 'Bs 20';
+const raffleTitle = process.env.RAFFLE_TITLE || 'Rifa solidaria Mi Refugio SC';
+const rafflePrize = process.env.RAFFLE_PRIZE || 'Premio sorpresa para ayudar a nuestros perritos';
+const raffleDrawDate = process.env.RAFFLE_DRAW_DATE || 'Fecha por anunciar';
+const raffleImpact = process.env.RAFFLE_IMPACT || 'Alimento, rescates y atencion veterinaria';
 const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
 const databaseUrl = process.env.DATABASE_URL;
 const rootDir = __dirname;
@@ -75,6 +79,34 @@ function statusCopy(status) {
     approved: 'Ticket aprobado',
     rejected: 'Comprobante observado'
   }[status] || status;
+}
+
+function progressStep(status) {
+  if (status === 'approved') return 4;
+  if (status === 'pending_review') return 3;
+  if (status === 'rejected') return 2;
+  return 1;
+}
+
+function progressMarkup(status) {
+  const current = progressStep(status);
+  const steps = [
+    ['Registro', 'Datos guardados'],
+    ['Pago QR', 'Comprobante'],
+    ['Revision', 'Validacion admin'],
+    ['Ticket', 'Numero aprobado']
+  ];
+  return `<div class="progress-track" aria-label="Progreso del ticket">
+    ${steps.map(([title, text], index) => {
+      const step = index + 1;
+      const state = step < current ? 'done' : step === current ? 'active' : '';
+      return `<div class="progress-step ${state}">
+        <span>${step}</span>
+        <strong>${title}</strong>
+        <small>${text}</small>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 function requireDb(req, res, next) {
@@ -216,22 +248,51 @@ app.get('/payment-qr/download', async (_req, res, next) => {
 app.get('/', requireDb, (_req, res) => {
   res.send(page('Comprar ticket', `
     <main class="shell">
+      <nav class="landing-nav">
+        <a href="/" class="brand-link"><img src="/logo" alt="Mi Refugio SC"><span>Mi Refugio SC</span></a>
+        <a class="ghost-btn" href="#comprar">Comprar ticket</a>
+      </nav>
       <section class="purchase-panel">
         <div class="brand-block">
-          <img class="brand-mark large" src="/logo" alt="Mi Refugio SC">
+          <div class="hero-logo-row">
+            <img class="brand-mark large" src="/logo" alt="Mi Refugio SC">
+            <div class="price-badge">
+              <span>Ticket</span>
+              <strong>${escapeHtml(ticketPriceLabel)}</strong>
+            </div>
+          </div>
           <p class="eyebrow">Ticket solidario virtual</p>
-          <h1>Compra tu ticket para apoyar a los perritos de Mi Refugio SC</h1>
-          <p class="lead">Completa tus datos, paga con QR y sube tu comprobante. Cuando el admin lo apruebe, tu ticket quedara disponible con un enlace para compartir.</p>
+          <h1>${escapeHtml(raffleTitle)}</h1>
+          <p class="lead">Participa, ayuda y recibe un ticket digital unico cuando validemos tu comprobante.</p>
           <div class="quick-facts">
             <span>${escapeHtml(ticketPriceLabel)}</span>
-            <span>Pago por QR</span>
-            <span>Ticket digital unico</span>
+            <span>${escapeHtml(raffleDrawDate)}</span>
+            <span>Pago seguro por QR</span>
           </div>
+          <section class="prize-showcase" aria-label="Premios e impacto">
+            <div class="prize-card main-prize">
+              <p class="eyebrow">Premio destacado</p>
+              <h2>${escapeHtml(rafflePrize)}</h2>
+              <small>Configurable desde Railway para cada campana.</small>
+            </div>
+            <div class="prize-card">
+              <p class="eyebrow">Tu ayuda cubre</p>
+              <h2>${escapeHtml(raffleImpact)}</h2>
+              <small>Cada ticket suma al cuidado diario del refugio.</small>
+            </div>
+          </section>
+          <section class="process-strip" aria-label="Proceso de compra">
+            <div><span>1</span><strong>Registras</strong><small>Nombre y WhatsApp</small></div>
+            <div><span>2</span><strong>Pagas QR</strong><small>Desde tu banco</small></div>
+            <div><span>3</span><strong>Subes</strong><small>Comprobante</small></div>
+            <div><span>4</span><strong>Recibes</strong><small>Ticket aprobado</small></div>
+          </section>
         </div>
-        <form class="form-card" method="post" action="/tickets">
+        <form id="comprar" class="form-card premium-form" method="post" action="/tickets" data-loading-form>
           <div class="form-heading">
             <span>Registro rapido</span>
             <strong>Datos para tu ticket</strong>
+            <small>Tu numero se activa cuando el comprobante sea revisado por Mi Refugio.</small>
           </div>
           <label>Nombre completo
             <input name="buyer_name" autocomplete="name" placeholder="Ej. Maria Fernandez" required>
@@ -244,13 +305,14 @@ app.get('/', requireDb, (_req, res) => {
           <label>Correo opcional
             <input name="email" type="email" autocomplete="email" placeholder="tu@email.com">
           </label>
-          <label>Crear contraseña
+          <label>Crear contrasena
             <input name="password" type="password" autocomplete="new-password" minlength="6" placeholder="Minimo 6 caracteres" required>
           </label>
-          <label>Repetir contraseña
-            <input name="password_confirm" type="password" autocomplete="new-password" minlength="6" placeholder="Confirma tu contraseña" required>
+          <label>Repetir contrasena
+            <input name="password_confirm" type="password" autocomplete="new-password" minlength="6" placeholder="Confirma tu contrasena" required>
           </label>
-          <button class="primary-btn" type="submit">Continuar al pago</button>
+          <button class="primary-btn" type="submit">Comprar ticket solidario</button>
+          <p class="trust-note">Despues veras el QR, subiras tu comprobante y podras volver con tu link.</p>
         </form>
       </section>
     </main>
@@ -267,12 +329,12 @@ app.post('/tickets', requireDb, async (req, res, next) => {
     const password = String(req.body.password || '');
     const passwordConfirm = String(req.body.password_confirm || '');
     if (password.length < 6 || password !== passwordConfirm) {
-      res.status(400).send(page('Revisa tu contraseña', `
+      res.status(400).send(page('Revisa tu contrasena', `
         <main class="shell compact">
           <section class="notice">
             <img class="brand-mark" src="/logo" alt="Mi Refugio SC">
-            <h1>Las contraseñas no coinciden</h1>
-            <p>Vuelve al formulario y confirma una contraseña de al menos 6 caracteres.</p>
+            <h1>Las contrasenas no coinciden</h1>
+            <p>Vuelve al formulario y confirma una contrasena de al menos 6 caracteres.</p>
             <a class="primary-btn" href="/">Volver</a>
           </section>
         </main>
@@ -303,6 +365,8 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
 
     const approvedTicket = ticket.status === 'approved' ? `
       <section class="ticket-card">
+        <div class="ticket-cut left"></div>
+        <div class="ticket-cut right"></div>
         <div>
           <p class="eyebrow">Mi Refugio SC</p>
           <h2>${escapeHtml(ticket.ticket_number)}</h2>
@@ -317,23 +381,40 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
     ` : '';
 
     const uploadForm = ticket.status !== 'approved' ? `
-      <section class="content-card">
+      <section class="content-card payment-card">
         <div class="section-title">
           <div>
-            <p class="eyebrow">Paso 1</p>
-            <h2>Paga con QR</h2>
+            <p class="eyebrow">Pago y comprobante</p>
+            <h2>${ticket.status === 'pending_review' ? 'Tu comprobante esta en revision' : ticket.status === 'rejected' ? 'Sube un nuevo comprobante' : 'Paga con QR y sube tu comprobante'}</h2>
+            <p class="muted">${ticket.status === 'pending_review' ? 'Ya recibimos tu archivo. El equipo de Mi Refugio lo revisara antes de activar tu numero.' : 'Descarga o amplia el QR, paga desde tu banco y sube una foto o PDF del comprobante.'}</p>
           </div>
-          <a class="ghost-btn" href="/payment-qr/download">Descargar QR</a>
         </div>
-        <button class="qr-frame" type="button" data-open-qr>
-          <img src="/payment-qr" alt="QR de pago Mi Refugio SC">
-        </button>
-        <form class="upload-box" method="post" action="/t/${ticket.public_id}/receipt" enctype="multipart/form-data">
-          <p class="eyebrow">Paso 2</p>
-          <h2>Sube tu comprobante</h2>
-          <input type="file" name="receipt" accept="image/png,image/jpeg,image/webp,application/pdf" required>
-          <button class="primary-btn" type="submit">Enviar comprobante a revision</button>
-        </form>
+        ${ticket.status === 'rejected' ? `<div class="state-alert rejected"><strong>Comprobante observado</strong><p>${escapeHtml(ticket.admin_note || 'El comprobante necesita revision. Sube una imagen o PDF nuevo para continuar.')}</p></div>` : ''}
+        <div class="payment-grid">
+          <div class="qr-panel">
+            <button class="qr-frame" type="button" data-open-qr>
+              <img src="/payment-qr" alt="QR de pago Mi Refugio SC">
+            </button>
+            <div class="qr-actions">
+              <button class="ghost-btn" type="button" data-open-qr>Ampliar QR</button>
+              <a class="ghost-btn" href="/payment-qr/download">Descargar QR</a>
+            </div>
+          </div>
+          <form class="upload-box enhanced-upload" method="post" action="/t/${ticket.public_id}/receipt" enctype="multipart/form-data" data-enhanced-upload>
+            <p class="eyebrow">Comprobante</p>
+            <h2>${ticket.status === 'pending_review' ? 'Reemplazar comprobante' : 'Sube tu comprobante'}</h2>
+            <label class="file-drop">
+              <input type="file" name="receipt" accept="image/png,image/jpeg,image/webp,application/pdf" required>
+              <span class="file-icon">PDF/JPG</span>
+              <strong>Seleccionar archivo</strong>
+              <small>JPG, PNG, WEBP o PDF hasta 6 MB</small>
+            </label>
+            <div class="file-preview" data-file-preview hidden></div>
+            <div class="upload-progress" data-upload-progress hidden><span></span></div>
+            <button class="primary-btn" type="submit">${ticket.status === 'pending_review' ? 'Enviar reemplazo' : 'Enviar comprobante a revision'}</button>
+            <p class="trust-note">Tu ticket se aprueba cuando el admin confirme el pago.</p>
+          </form>
+        </div>
       </section>
     ` : '';
 
@@ -351,14 +432,20 @@ app.get('/t/:publicId', requireDb, async (req, res, next) => {
             <span>${escapeHtml(ticket.buyer_name || 'Colaborador')}</span>
             <span>${escapeHtml(ticket.whatsapp || '')}</span>
           </div>
+          ${progressMarkup(ticket.status)}
         </section>
         ${approvedTicket}
         ${uploadForm}
       </main>
       <dialog class="qr-modal" data-qr-modal>
         <button class="icon-btn" type="button" data-close-qr aria-label="Cerrar">x</button>
+        <p class="eyebrow">QR de pago</p>
+        <h2>Escanea o descarga el QR</h2>
         <img src="/payment-qr" alt="QR de pago Mi Refugio SC ampliado">
-        <a class="primary-btn" href="/payment-qr/download">Descargar QR</a>
+        <div class="modal-actions">
+          <a class="primary-btn" href="/payment-qr/download">Descargar QR</a>
+          <button class="ghost-btn" type="button" data-copy="${escapeHtml(ticketLink(ticket.public_id))}">Copiar link</button>
+        </div>
       </dialog>
     `));
   } catch (error) {
@@ -393,7 +480,23 @@ app.post('/t/:publicId/receipt', requireDb, upload.single('receipt'), async (req
 app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
   try {
     const storedQr = await getStoredPaymentQr();
-    const { rows } = await pool.query('SELECT id, public_id, ticket_number, buyer_name, whatsapp, status, created_at, receipt_uploaded_at FROM tickets ORDER BY created_at DESC LIMIT 200');
+    const statsResult = await pool.query(`
+      SELECT
+        COUNT(*)::INT AS total,
+        COUNT(*) FILTER (WHERE status = 'pending_review')::INT AS pending,
+        COUNT(*) FILTER (WHERE status = 'approved')::INT AS approved,
+        COUNT(*) FILTER (WHERE status = 'rejected')::INT AS rejected
+      FROM tickets
+    `);
+    const stats = statsResult.rows[0] || { total: 0, pending: 0, approved: 0, rejected: 0 };
+    const { rows } = await pool.query(`
+      SELECT id, public_id, ticket_number, buyer_name, whatsapp, status, created_at, receipt_uploaded_at
+      FROM tickets
+      ORDER BY
+        CASE WHEN status = 'pending_review' THEN 0 WHEN status = 'awaiting_receipt' THEN 1 WHEN status = 'rejected' THEN 2 ELSE 3 END,
+        COALESCE(receipt_uploaded_at, created_at) DESC
+      LIMIT 200
+    `);
     const items = rows.map((ticket) => `
       <article class="admin-row ${ticket.status}">
         <div>
@@ -404,8 +507,14 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
         <div class="admin-actions">
           <a class="ghost-btn" href="/t/${ticket.public_id}" target="_blank">Ver</a>
           ${ticket.receipt_uploaded_at ? `<a class="ghost-btn" href="/admin/tickets/${ticket.id}/receipt" target="_blank">Comprobante</a>` : ''}
-          <form method="post" action="/admin/tickets/${ticket.id}/approve"><button class="primary-btn" type="submit">Aprobar</button></form>
-          <form method="post" action="/admin/tickets/${ticket.id}/reject"><button class="danger-btn" type="submit">Observar</button></form>
+          ${ticket.receipt_uploaded_at ? `<form method="post" action="/admin/tickets/${ticket.id}/approve" data-confirm="Aprobar este comprobante y generar ticket?"><button class="primary-btn" type="submit">Aprobar</button></form>` : '<button class="ghost-btn" type="button" disabled>Sin comprobante</button>'}
+          <details class="observe-box">
+            <summary>Observar</summary>
+            <form method="post" action="/admin/tickets/${ticket.id}/reject" data-loading-form>
+              <textarea name="admin_note" rows="2" maxlength="240" placeholder="Motivo para el usuario" required></textarea>
+              <button class="danger-btn" type="submit">Guardar observacion</button>
+            </form>
+          </details>
         </div>
       </article>
     `).join('');
@@ -425,13 +534,24 @@ app.get('/admin', requireDb, adminAuth, async (_req, res, next) => {
           </div>
           <div class="qr-admin-grid">
             <img class="qr-preview" src="/payment-qr" alt="QR de pago actual">
-            <form class="upload-box" method="post" action="/admin/payment-qr" enctype="multipart/form-data">
-              <label>Subir o reemplazar QR
+            <form class="upload-box enhanced-upload" method="post" action="/admin/payment-qr" enctype="multipart/form-data" data-enhanced-upload>
+              <label class="file-drop">Subir o reemplazar QR
                 <input type="file" name="payment_qr" accept="image/png,image/jpeg,image/webp" required>
+                <span class="file-icon">QR</span>
+                <strong>Seleccionar imagen QR</strong>
+                <small>JPG, PNG o WEBP hasta 4 MB</small>
               </label>
+              <div class="file-preview" data-file-preview hidden></div>
+              <div class="upload-progress" data-upload-progress hidden><span></span></div>
               <button class="primary-btn" type="submit">Guardar QR de pago</button>
             </form>
           </div>
+        </section>
+        <section class="admin-stats" aria-label="Resumen admin">
+          <div><span>${stats.pending}</span><strong>En revision</strong></div>
+          <div><span>${stats.approved}</span><strong>Aprobados</strong></div>
+          <div><span>${stats.rejected}</span><strong>Observados</strong></div>
+          <div><span>${stats.total}</span><strong>Total tickets</strong></div>
         </section>
         <section class="content-card">
           <div class="section-title">
@@ -492,7 +612,8 @@ app.post('/admin/tickets/:id/approve', requireDb, adminAuth, async (req, res, ne
        SET status = 'approved',
            ticket_number = COALESCE(ticket_number, 'MR-' || TO_CHAR(NOW(), 'YYYY') || '-' || LPAD(id::TEXT, 5, '0')),
            approved_at = NOW(),
-           rejected_at = NULL
+           rejected_at = NULL,
+           admin_note = NULL
        WHERE id = $1`,
       [req.params.id]
     );
@@ -504,13 +625,15 @@ app.post('/admin/tickets/:id/approve', requireDb, adminAuth, async (req, res, ne
 
 app.post('/admin/tickets/:id/reject', requireDb, adminAuth, async (req, res, next) => {
   try {
+    const adminNote = String(req.body.admin_note || '').trim().slice(0, 240);
     await pool.query(
       `UPDATE tickets
        SET status = 'rejected',
            rejected_at = NOW(),
-           approved_at = NULL
+           approved_at = NULL,
+           admin_note = $2
        WHERE id = $1`,
-      [req.params.id]
+      [req.params.id, adminNote || 'Comprobante observado. Por favor sube uno nuevo.']
     );
     res.redirect('/admin');
   } catch (error) {

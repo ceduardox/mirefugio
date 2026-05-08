@@ -7,9 +7,10 @@ Sistema Node.js + PostgreSQL para vender tickets virtuales solidarios.
 - El usuario registra nombre, WhatsApp y correo opcional.
 - El usuario crea una contraseña, guardada como hash.
 - El telefono usa selector de pais con deteccion inicial por IP y cambio manual.
+- La portada muestra premio, fecha, causa y pasos antes del formulario.
 - Ve el QR de pago, puede ampliarlo o descargarlo.
-- Sube el comprobante de pago.
-- El admin revisa y aprueba.
+- Sube el comprobante de pago con vista previa y progreso.
+- El admin revisa, aprueba u observa con motivo.
 - Al aprobarse se genera un numero unico de ticket y un enlace publico para compartir.
 
 ## Configuracion local
@@ -31,6 +32,10 @@ Configura `DATABASE_URL` antes de iniciar. La app crea la tabla automaticamente 
    - `ADMIN_PASSWORD`
    - `PUBLIC_BASE_URL`
    - `TICKET_PRICE_LABEL`
+   - `RAFFLE_TITLE`
+   - `RAFFLE_PRIZE`
+   - `RAFFLE_DRAW_DATE`
+   - `RAFFLE_IMPACT`
    - `PAYMENT_QR_URL` opcional, solo como respaldo si aun no subiste QR desde admin
 4. Start command: `npm start`
 
